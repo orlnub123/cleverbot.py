@@ -1,13 +1,8 @@
-__all__ = ['CleverbotError', 'APIError', 'DecodeError', 'Timeout']
-
-from requests.exceptions import HTTPError, Timeout
-
-
 class CleverbotError(Exception):
     """Base class for all Cleverbot errors."""
 
 
-class APIError(CleverbotError, HTTPError):
+class APIError(CleverbotError):
     """Raised when a Cleverbot API error occurs.
 
     Errors:
@@ -18,23 +13,23 @@ class APIError(CleverbotError, HTTPError):
         503: Too many requests from a single IP address or API key.
     """
 
-    def __init__(self, error):
-        super(Exception, self).__init__(error)
+    def __init__(self, error, status):
+        self.error = error
+        self.status = status
+        super(APIError, self).__init__(error + " Status: " + status)
 
 
-class DecodeError(CleverbotError, ValueError):
+class DecodeError(CleverbotError):
     """Raised when a decode error occurs while reading the reply.
 
     This shouldn't happen.
     """
 
-    def __init__(self, error):
-        super(Exception, self).__init__(error)
 
-
-class Timeout(CleverbotError, Timeout):
-    """Raised when the request times out."""
+class Timeout(CleverbotError):
+    """Raised when the request times out after the specified time."""
 
     def __init__(self, timeout):
-        super(Exception, self).__init__(
+        self.timeout = timeout
+        super(Timeout, self).__init__(
             "Request timed out after {} seconds.".format(timeout))

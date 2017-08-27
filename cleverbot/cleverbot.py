@@ -1,7 +1,8 @@
 __all__ = ['Cleverbot']
 
+import pkgutil
 import requests
-from .errors import APIError, DecodeError, Timeout
+from .errors import CleverbotError, APIError, DecodeError, Timeout
 
 
 class Cleverbot(object):
@@ -48,8 +49,8 @@ class Cleverbot(object):
                 502 or 504: Unable to get reply from API server, please contact
                     us.
                 503: Too many requests from a single IP address or API key.
+            DecodeError: An error occurred while reading the reply.
             Timeout: The request timed out.
-            DecodeError: A decoding error occurred while reading the reply.
         """
         params = {
             'key': self.key,
@@ -60,7 +61,11 @@ class Cleverbot(object):
             params.update({'cs': self.cs})
         if vtext:
             params.update(vtext)
-        return self.query(params)
+        return self._query(params)
+
+    def asay(self, *args, **kwargs):
+        """Look in _async.py for the actual function."""
+        raise CleverbotError("asay requires Python 3.4.2+ and aiohttp.")
 
     def reset(self):
         """Reset all of Cleverbot's history."""
@@ -68,7 +73,7 @@ class Cleverbot(object):
             delattr(self, attribute)
         self.attr_list = []
 
-    def query(self, params):
+    def _query(self, params):
         """Get Cleverbot's reply and populate the instance attributes with it.
 
         Attributes:
@@ -114,5 +119,7 @@ class Cleverbot(object):
                             self.attr_list.append(var)
                     return self.output
                 else:
-                    raise APIError(
-                        content['error'] + " Status: " + content['status'])
+                    raise APIError(content['error'], content['status'])
+
+    if pkgutil.find_loader('aiohttp'):
+        from ._async import __init__, asay, _aquery

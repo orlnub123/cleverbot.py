@@ -18,13 +18,15 @@ with open('README.rst') as f:
 setup(
     name='cleverbot.py',
     version=version,
-    description='A Cleverbot API wrapper for Python.',
+    description='A Cleverbot API wrapper for Python with asynchronous '
+    'functionality.',
     long_description=readme,
     url='https://github.com/orlnub123/cleverbot.py',
     author='orlnub123',
     license='MIT',
     packages=['cleverbot'],
     install_requires=['requests>=1.0.0'],
+    extras_require={'async': ['aiohttp>=1.0.0']},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: MIT License',

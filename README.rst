@@ -7,13 +7,13 @@ fully-featured and easy to use.
 Installing
 ----------
 
-Install it from PyPI using pip:
+Install it from PyPI with pip:
 
 ::
 
     pip install cleverbot.py
 
-Or install it from GitHub with git:
+Or install it from GitHub using git:
 
 ::
 
@@ -24,6 +24,15 @@ Or install it from GitHub with git:
 If you don't have pip or git you can also download the source and run ``python
 setup.py install`` on it.
 
+To install Cleverbot with asynchronous support you'll have to use pip and be on
+Python 3.4.2+.
+
+::
+
+    pip install cleverbot.py[async]
+
+This is not required if you already have aiohttp.
+
 **Requirements:**
 
 - Python 3.2+ or 2.6+
@@ -32,6 +41,7 @@ setup.py install`` on it.
 **Dependencies:**
 
 - Requests 1.0.0+
+- aiohttp 1.0.0+ (Optional, for asynchronous support.)
 
 Usage
 -----
@@ -71,17 +81,37 @@ Or alternatively get it later:
     cb.say("Hello")
     reply = cb.output
 
+If you want to talk to Cleverbot asynchronously use ``asay`` instead. This only
+works if you're on Python 3.4.2+ and have aiohttp installed. Experience with
+asyncio is recommended as you'll have to run it in your own event loop.
+
+.. code:: py
+
+    await cb.asay("Hello")
+
+If you're on Python 3.4 you'll have to use ``yield from`` instead of ``await``.
+
 --------------
 
 If something goes wrong with the request, such as an invalid API key an
 ``APIError`` will be raised containing the error message and HTTP status
-code or, if you've defined a timeout and the request times out you'll
-get a ``Timeout``.
+code or, if you've defined a timeout and you don't get a reply within the
+defined amount of seconds you'll get a ``Timeout``.
 
 As an example:
 
 ``cleverbot.errors.APIError: Missing or invalid API key or POST request, please
 visit www.cleverbot.com/api Status: 401``
+
+You can get the error message and status like so:
+
+.. code:: py
+
+    except cleverbot.APIError as error:
+        print(error.error, error.status)
+
+This is also applicable to ``Timeout`` where you can get the defined timeout
+value by calling ``error.timeout``.
 
 Also, all Cleverbot errors subclass ``CleverbotError`` so you can use it
 to catch everything Cleverbot related.
@@ -99,7 +129,7 @@ Take note of the ``cs`` attribute as we'll use it to save the conversation in
 the next section.
 
 To get a list of all of the attributes' descriptions either take a look at the
-``query`` function's docstring in cleverbot.py or go to the JSON Reply section
+``_query`` function's docstring in cleverbot.py or go to the JSON Reply section
 at `the official Cleverbot API docs <https://www.cleverbot.com/api/howto/>`_.
 
 --------------
@@ -136,7 +166,8 @@ Or by setting it when creating a new Cleverbot instance.
 
 --------------
 
-If you wish to use ``cleverbot`` as a variable you can do one of the following:
+If you wish to use ``cleverbot`` as a variable name you can do one of the
+following:
 
 .. code:: py
 
