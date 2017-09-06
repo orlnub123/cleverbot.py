@@ -3,8 +3,8 @@ import aiohttp
 from .errors import APIError, DecodeError, Timeout
 
 
-def __init__(self, key, cs=None, timeout=None, loop=None):
-    """Initialize Cleverbot in cleverbot.py with the given arguments.
+def __init__(self, key, **kwargs):
+    """Initialize Cleverbot with the given arguments.
 
     Arguments:
         key: The key argument is always required. It is your API key.
@@ -13,14 +13,18 @@ def __init__(self, key, cs=None, timeout=None, loop=None):
             conversation history up to that point.
         timeout: How many seconds to wait for the API to send data before
             giving up and raising an error.
-        loop: The event loop used for processing asay.
+        loop: The event loop used for asay.
+        **kwargs: Keyword arguments to pass into aiohttp.ClientSession.get
     """
     self.key = key
-    if cs is not None:
-        self.cs = cs
-    self.timeout = timeout
-    self.loop = loop
-    self.attr_list = []
+    try:
+        self.cs = kwargs.pop('cs')
+    except KeyError:
+        pass
+    self.timeout = kwargs.pop('timeout', None)
+    self.loop = kwargs.pop('loop', None)
+    self.kwargs = kwargs
+    self._attr_list = []
 
 
 def asay(self, text, **vtext):
@@ -93,7 +97,7 @@ def _aquery(self, params):
     session = aiohttp.ClientSession(loop=self.loop)
     try:
         reply = yield from session.get(
-            self.url, params=params, timeout=self.timeout)
+            self.url, params=params, timeout=self.timeout, **self.kwargs)
     except asyncio.TimeoutError:
         raise Timeout(self.timeout)
     else:
@@ -105,8 +109,8 @@ def _aquery(self, params):
             if reply.status == 200:
                 for var in content:
                     setattr(self, var, content[var])
-                    if var not in self.attr_list:
-                        self.attr_list.append(var)
+                    if var not in self._attr_list:
+                        self._attr_list.append(var)
                 return self.output
             else:
                 raise APIError(content['error'], content['status'])

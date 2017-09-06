@@ -10,7 +10,7 @@ class Cleverbot(object):
 
     url = 'https://www.cleverbot.com/getreply'
 
-    def __init__(self, key, cs=None, timeout=None):
+    def __init__(self, key, **kwargs):
         """Initialize Cleverbot with the given arguments.
 
         Arguments:
@@ -20,12 +20,16 @@ class Cleverbot(object):
                 conversation history up to that point.
             timeout: How many seconds to wait for the API to send data before
                 giving up and raising an error.
+            **kwargs: Keyword arguments to pass into requests.get
         """
         self.key = key
-        if cs is not None:
-            self.cs = cs
-        self.timeout = timeout
-        self.attr_list = []
+        try:
+            self.cs = kwargs.pop('cs')
+        except KeyError:
+            pass
+        self.timeout = kwargs.pop('timeout', None)
+        self.kwargs = kwargs
+        self._attr_list = []
 
     def say(self, text, **vtext):
         """Talk to Cleverbot.
@@ -65,13 +69,13 @@ class Cleverbot(object):
 
     def asay(self, *args, **kwargs):
         """Look in _async.py for the actual function."""
-        raise CleverbotError("asay requires Python 3.4.2+ and aiohttp.")
+        raise CleverbotError("asay requires aiohttp.")
 
     def reset(self):
         """Reset all of Cleverbot's history."""
-        for attribute in self.attr_list:
+        for attribute in self._attr_list:
             delattr(self, attribute)
-        self.attr_list = []
+        self._attr_list = []
 
     def _query(self, params):
         """Get Cleverbot's reply and populate the instance attributes with it.
@@ -103,7 +107,8 @@ class Cleverbot(object):
                 will not be defined.
         """
         try:
-            reply = requests.get(self.url, params=params, timeout=self.timeout)
+            reply = requests.get(
+                self.url, params=params, timeout=self.timeout, **self.kwargs)
         except requests.Timeout:
             raise Timeout(self.timeout)
         else:
@@ -115,8 +120,8 @@ class Cleverbot(object):
                 if reply.status_code == 200:
                     for var in content:
                         setattr(self, var, content[var])
-                        if var not in self.attr_list:
-                            self.attr_list.append(var)
+                        if var not in self._attr_list:
+                            self._attr_list.append(var)
                     return self.output
                 else:
                     raise APIError(content['error'], content['status'])

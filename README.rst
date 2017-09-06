@@ -4,6 +4,24 @@ cleverbot.py
 cleverbot.py is a Cleverbot API wrapper for Python made to be both
 fully-featured and easy to use.
 
+Example
+-------
+
+.. code:: py
+
+    import cleverbot
+
+
+    cb = cleverbot.Cleverbot('YOUR_API_KEY', timeout=60)
+
+    text = input("Say to Cleverbot: ")
+    try:
+        reply = cb.say(text)
+    except cleverbot.CleverbotError as error:
+        print(error)
+    else:
+        print(reply)
+
 Installing
 ----------
 
@@ -123,7 +141,10 @@ conversation.
 
 .. code:: py
 
-    print(cb.attr_list)
+    print(cb._attr_list)
+
+Make sure to never modify the ``_attr_list`` as it's how Cleverbot knows what
+to reset when resetting.
 
 Take note of the ``cs`` attribute as we'll use it to save the conversation in
 the next section.
@@ -140,7 +161,7 @@ Save the conversation in preparation for a reset.
 
     cs = cb.cs
 
-Reset Cleverbot, deleting all of its attributes gained from the previous
+Reset Cleverbot, deleting all of the attributes it's gained from the previous
 conversations.
 
 .. code:: py
@@ -176,23 +197,3 @@ following:
 .. code:: py
 
     from cleverbot import *
-
---------------
-
-Example
-~~~~~~~
-
-.. code:: py
-
-    import cleverbot
-
-
-    cb = cleverbot.Cleverbot('YOUR_API_KEY', timeout=60)
-
-    text = input("Say to Cleverbot: ")
-    try:
-        reply = cb.say(text)
-    except cleverbot.CleverbotError as error:
-        print(error)
-    else:
-        print(reply)
