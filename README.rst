@@ -72,8 +72,8 @@ First import the module.
 
 --------------
 
-Then initialize Cleverbot with your API key and optionally a cleverbot
-state and or timeout.
+Then initialize Cleverbot with your API key and optionally a cleverbot state
+and or timeout.
 
 .. code:: py
 
@@ -101,38 +101,42 @@ Or alternatively get it later:
 
 If you want to talk to Cleverbot asynchronously use ``asay`` instead. This only
 works if you're on Python 3.4.2+ and have aiohttp installed. Experience with
-asyncio is recommended as you'll have to run it in your own event loop.
+asyncio is recommended as you'll have to run it in an event loop.
 
 .. code:: py
 
     await cb.asay("Hello")
 
-If you're on Python 3.4 you'll have to use ``yield from`` instead of ``await``.
+A big benefit of using ``asay`` is that it allows multiple requests to be sent
+at once instead of waiting for the previous request to return a response which
+can take significantly longer.
 
 --------------
 
 If something goes wrong with the request, such as an invalid API key an
-``APIError`` will be raised containing the error message and HTTP status
-code or, if you've defined a timeout and you don't get a reply within the
-defined amount of seconds you'll get a ``Timeout``.
+``APIError`` will be raised containing the error message or, if you've defined
+a timeout and you don't get a reply within the defined amount of seconds you'll
+get a ``Timeout``.
 
 As an example:
 
 ``cleverbot.errors.APIError: Missing or invalid API key or POST request, please
-visit www.cleverbot.com/api Status: 401``
+visit www.cleverbot.com/api``
 
-You can get the error message and status like so:
+You can get the error message and additionally the status like so:
 
 .. code:: py
 
+    try:
+        cb.say("Hello")
     except cleverbot.APIError as error:
         print(error.error, error.status)
 
 This is also applicable to ``Timeout`` where you can get the defined timeout
-value by calling ``error.timeout``.
+value with ``error.timeout``.
 
-Also, all Cleverbot errors subclass ``CleverbotError`` so you can use it
-to catch everything Cleverbot related.
+Also, all Cleverbot errors subclass ``CleverbotError`` so you can use it to
+catch everything Cleverbot related.
 
 --------------
 
@@ -151,7 +155,7 @@ the next section.
 
 To get a list of all of the attributes' descriptions either take a look at the
 ``_query`` function's docstring in cleverbot.py or go to the JSON Reply section
-at `the official Cleverbot API docs <https://www.cleverbot.com/api/howto/>`_.
+in `the official Cleverbot API docs <https://www.cleverbot.com/api/howto/>`_.
 
 --------------
 

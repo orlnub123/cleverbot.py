@@ -14,9 +14,9 @@ class APIError(CleverbotError):
     """
 
     def __init__(self, error, status):
+        super(APIError, self).__init__(error)
         self.error = error
         self.status = status
-        super(APIError, self).__init__(error + " Status: " + status)
 
 
 class DecodeError(CleverbotError):
@@ -30,6 +30,6 @@ class Timeout(CleverbotError):
     """Raised when the request times out after the specified time."""
 
     def __init__(self, timeout):
-        self.timeout = timeout
         super(Timeout, self).__init__(
-            "Request timed out after {} seconds.".format(timeout))
+            "Request timed out after {} seconds".format(timeout))
+        self.timeout = timeout

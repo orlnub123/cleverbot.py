@@ -1,6 +1,5 @@
 __all__ = ['Cleverbot']
 
-import pkgutil
 import requests
 from .errors import CleverbotError, APIError, DecodeError, Timeout
 
@@ -69,7 +68,7 @@ class Cleverbot(object):
 
     def asay(self, *args, **kwargs):
         """Look in _async.py for the actual function."""
-        raise CleverbotError("asay requires aiohttp.")
+        raise CleverbotError("asay requires aiohttp and Python 3.4.2+")
 
     def reset(self):
         """Reset all of Cleverbot's history."""
@@ -126,5 +125,7 @@ class Cleverbot(object):
                 else:
                     raise APIError(content['error'], content['status'])
 
-    if pkgutil.find_loader('aiohttp'):
+    try:
         from ._async import __init__, asay, _aquery
+    except (ImportError, SyntaxError):
+        pass
