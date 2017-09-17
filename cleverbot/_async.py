@@ -3,30 +3,7 @@ import aiohttp
 from .errors import APIError, DecodeError, Timeout
 
 
-def __init__(self, key, **kwargs):
-    """Initialize Cleverbot with the given arguments.
-
-    Arguments:
-        key: The key argument is always required. It is your API key.
-        cs: The cs argument stands for "cleverbot state". It is the encoded
-            state of the conversation so far and includes the whole
-            conversation history up to that point.
-        timeout: How many seconds to wait for the API to send data before
-            giving up and raising an error.
-        loop: The event loop used for asay.
-        **kwargs: Keyword arguments to pass into aiohttp.ClientSession.get
-    """
-    self.key = key
-    try:
-        self.cs = kwargs.pop('cs')
-    except KeyError:
-        pass
-    self.timeout = kwargs.pop('timeout', None)
-    self.loop = kwargs.pop('loop', None)
-    self.kwargs = kwargs
-    self._attr_list = []
-
-
+@asyncio.coroutine
 def asay(self, text, **vtext):
     """Talk to Cleverbot asynchronously.
 
@@ -55,18 +32,20 @@ def asay(self, text, **vtext):
         'input': text,
         'wrapper': 'cleverbot.py'
     }
-    if hasattr(self, 'cs'):
-        params.update({'cs': self.cs})
+    try:
+        params['cs'] = self.data['cs']
+    except KeyError:
+        pass
     if vtext:
         params.update(vtext)
-    return self._aquery(params)
+    return (yield from self._aquery(params))
 
 
 @asyncio.coroutine
 def _aquery(self, params):
-    """Get Cleverbot's reply and populate the instance attributes with it.
+    """Get Cleverbot's reply and store it in a dictionary.
 
-    Attributes:
+    Keys:
         cs: State of the conversation so far, which contains an encoded copy of
             the conversation id and history.
         interaction_count: How many pairs of bot/user interactions have
@@ -96,17 +75,14 @@ def _aquery(self, params):
         raise Timeout(self.timeout)
     else:
         try:
-            content = yield from reply.json()
+            data = yield from reply.json()
         except ValueError as error:
             raise DecodeError(error)
         else:
             if reply.status == 200:
-                for var in content:
-                    setattr(self, var, content[var])
-                    if var not in self._attr_list:
-                        self._attr_list.append(var)
-                return self.output
+                self.data = data
+                return data['output']
             else:
-                raise APIError(content['error'], content['status'])
+                raise APIError(data['error'], data['status'])
     finally:
         session.close()

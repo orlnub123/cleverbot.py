@@ -64,7 +64,7 @@ This is not required if you already have aiohttp.
 Usage
 -----
 
-First import the module.
+First import the module:
 
 .. code:: py
 
@@ -73,7 +73,7 @@ First import the module.
 --------------
 
 Then initialize Cleverbot with your API key and optionally a cleverbot state
-and or timeout.
+and or timeout:
 
 .. code:: py
 
@@ -99,13 +99,15 @@ Or alternatively get it later:
     cb.say("Hello")
     reply = cb.output
 
-If you want to talk to Cleverbot asynchronously use ``asay`` instead. This only
-works if you're on Python 3.4.2+ and have aiohttp installed. Experience with
-asyncio is recommended as you'll have to run it in an event loop.
+If you want to talk to Cleverbot asynchronously use ``asay`` instead:
 
 .. code:: py
 
     await cb.asay("Hello")
+
+``asay`` only works if you're on Python 3.4.2+ and have aiohttp installed.
+Experience with asyncio is recommended as you'll have to run it in an event
+loop.
 
 A big benefit of using ``asay`` is that it allows multiple requests to be sent
 at once instead of waiting for the previous request to return a response which
@@ -123,7 +125,7 @@ As an example:
 ``cleverbot.errors.APIError: Missing or invalid API key or POST request, please
 visit www.cleverbot.com/api``
 
-You can get the error message and additionally the status like so:
+You can get the error message and additionally the HTTP status like so:
 
 .. code:: py
 
@@ -140,33 +142,40 @@ catch everything Cleverbot related.
 
 --------------
 
-Print out all of the attributes Cleverbot gained from the previous
-conversation.
+Print out all of the data Cleverbot gained from the previous conversation:
 
 .. code:: py
 
-    print(cb._attr_list)
+    print(cb.data)
 
-Make sure to never modify the ``_attr_list`` as it's how Cleverbot knows what
-to reset when resetting.
+To access them you can either use them like an attribute or directly get them
+from ``cb.data``.
 
-Take note of the ``cs`` attribute as we'll use it to save the conversation in
-the next section.
+For example:
 
-To get a list of all of the attributes' descriptions either take a look at the
-``_query`` function's docstring in cleverbot.py or go to the JSON Reply section
+.. code:: py
+
+    cb.output
+
+    cb.data['output']
+
+Take note of the ``cs`` key as we'll use it to save the conversation in the
+next section.
+
+To get a list of all of the keys' descriptions either take a look at the
+``_query`` method's docstring in cleverbot.py or go to the JSON Reply section
 in `the official Cleverbot API docs <https://www.cleverbot.com/api/howto/>`_.
 
 --------------
 
-Save the conversation in preparation for a reset.
+Save the conversation in preparation for a reset:
 
 .. code:: py
 
     cs = cb.cs
 
-Reset Cleverbot, deleting all of the attributes it's gained from the previous
-conversations.
+Reset Cleverbot, deleting all of the data it's gained from the previous
+conversations:
 
 .. code:: py
 
@@ -177,13 +186,13 @@ Note that if you try to get the cleverbot state now you'll get an error:
 ``AttributeError: 'Cleverbot' object has no attribute 'cs'``
 
 Now start right where you left off by setting the cleverbot state you saved
-earlier.
+earlier:
 
 .. code:: py
 
     cb.cs = cs
 
-Or by setting it when creating a new Cleverbot instance.
+Or by setting it when creating a new Cleverbot instance:
 
 .. code:: py
 
