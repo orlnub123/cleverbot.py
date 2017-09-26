@@ -1,6 +1,8 @@
 __all__ = ['Cleverbot']
 
 import requests
+
+from . import __version__
 from .errors import CleverbotError, APIError, DecodeError, Timeout
 
 
@@ -19,24 +21,32 @@ class Cleverbot(object):
                 conversation history up to that point.
             timeout: How many seconds to wait for the API to send data before
                 giving up and raising an error.
-            loop: The event loop used for asay.
-            **kwargs: Keyword arguments to pass into requests.get
+            **kwargs: Keyword arguments to pass into requests.Session.get
         """
+        self.session = requests.Session()
         self.key = key
         self.data = {}
         if 'cs' in kwargs:
             self.data['cs'] = kwargs.pop('cs')
         self.timeout = kwargs.pop('timeout', None)
-        self.loop = kwargs.pop('loop', None)
         self.kwargs = kwargs
 
-    def __getattr__(self, attr):
+    def __getattribute__(self, attr):
         """Allow access to the stored data through attributes."""
         try:
-            return self.data[attr]
-        except KeyError as error:
-            pass
-        object.__getattribute__(self, attr)
+            return super(Cleverbot, self).__getattribute__(attr)
+        except AttributeError as error:
+            try:
+                return super(Cleverbot, self).__getattribute__('data')[attr]
+            except KeyError:
+                raise error
+
+    def __setattr__(self, attr, value):
+        """Allow modifying the cleverbot state with an attribute."""
+        if attr == 'cs':
+            self.data['cs'] = value
+        else:
+            super(Cleverbot, self).__setattr__(attr, value)
 
     def say(self, text, **vtext):
         """Talk to Cleverbot.
@@ -77,15 +87,19 @@ class Cleverbot(object):
         return self._query(params)
 
     def asay(self, *args, **kwargs):
-        """Look in _async.py for the actual function."""
+        """Look in _async.py for the actual method."""
         raise CleverbotError("asay requires aiohttp and Python 3.4.2+")
 
     def reset(self):
         """Reset all of Cleverbot's stored data."""
         self.data = {}
 
+    def close(self):
+        """Close the connection to the API."""
+        self.session.close()
+
     def _query(self, params):
-        """Get Cleverbot's reply and store it in a dictionary.
+        """Get Cleverbot's reply and store the data in a dictionary.
 
         Keys:
             cs: State of the conversation so far, which contains an encoded
@@ -113,9 +127,13 @@ class Cleverbot(object):
                 Note that if an interaction didn't occur, the interaction_other
                 will not be defined.
         """
+        headers = {
+            'User-Agent': 'cleverbot.py/' + __version__ + ' '
+            '(+https://github.com/orlnub123/cleverbot.py)'
+        }
         try:
-            reply = requests.get(
-                self.url, params=params, timeout=self.timeout, **self.kwargs)
+            reply = self.session.get(self.url, params=params, headers=headers,
+                                     timeout=self.timeout, **self.kwargs)
         except requests.Timeout:
             raise Timeout(self.timeout)
         else:
@@ -131,6 +149,6 @@ class Cleverbot(object):
                     raise APIError(data['error'], data['status'])
 
     try:
-        from ._async import asay, _aquery
+        from ._async import __init__, asay, close, _aquery
     except (ImportError, SyntaxError):
         pass

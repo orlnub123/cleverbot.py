@@ -21,6 +21,8 @@ Example
         print(error)
     else:
         print(reply)
+    finally:
+        cb.close()
 
 Installing
 ----------
@@ -49,7 +51,7 @@ Python 3.4.2+.
 
     pip install cleverbot.py[async]
 
-This is not required if you already have aiohttp.
+This is not required if you already have aiohttp 1.0.0 or later.
 
 **Requirements:**
 
@@ -58,13 +60,13 @@ This is not required if you already have aiohttp.
 
 **Dependencies:**
 
-- Requests 1.0.0+
-- aiohttp 1.0.0+ (Optional, for asynchronous support.)
+- requests 1.0.0+
+- aiohttp 1.0.0+ (Optional, for asynchronous support)
 
 Usage
 -----
 
-First import the module:
+First import the package:
 
 .. code:: py
 
@@ -115,7 +117,7 @@ can take significantly longer.
 
 --------------
 
-If something goes wrong with the request, such as an invalid API key an
+If something goes wrong with the request, such as an invalid API key, an
 ``APIError`` will be raised containing the error message or, if you've defined
 a timeout and you don't get a reply within the defined amount of seconds you'll
 get a ``Timeout``.
@@ -148,22 +150,21 @@ Print out all of the data Cleverbot gained from the previous conversation:
 
     print(cb.data)
 
-To access them you can either use them like an attribute or directly get them
-from ``cb.data``.
-
-For example:
-
-.. code:: py
-
-    cb.output
-
-    cb.data['output']
-
 Take note of the ``cs`` key as we'll use it to save the conversation in the
 next section.
 
+To access the data you can either get them from an attribute or directly get
+them from ``cb.data``:
+
+.. code:: py
+
+    cb.output == cb.data['output']
+
+However modifying the data with an attribute is only applicable to the
+cleverbot state.
+
 To get a list of all of the keys' descriptions either take a look at the
-``_query`` method's docstring in cleverbot.py or go to the JSON Reply section
+``_query`` method's docstring in cleverbot.py or go to the 'JSON Reply' section
 in `the official Cleverbot API docs <https://www.cleverbot.com/api/howto/>`_.
 
 --------------
@@ -200,13 +201,11 @@ Or by setting it when creating a new Cleverbot instance:
 
 --------------
 
-If you wish to use ``cleverbot`` as a variable name you can do one of the
-following:
+When you're all done, close Cleverbot's connection to the API:
 
 .. code:: py
 
-    import cleverbot as some_other_name
+    cb.close()
 
-.. code:: py
-
-    from cleverbot import *
+This should only be done when you're not going to use the current instance of
+Cleverbot anymore.

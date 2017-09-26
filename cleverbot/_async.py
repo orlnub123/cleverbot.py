@@ -1,6 +1,35 @@
 import asyncio
+
 import aiohttp
+import requests
+
+from . import __version__
 from .errors import APIError, DecodeError, Timeout
+
+
+def __init__(self, key, **kwargs):
+    """Initialize Cleverbot with the given arguments.
+
+    Arguments:
+        key: The key argument is always required. It is your API key.
+        cs: The cs argument stands for "cleverbot state". It is the encoded
+            state of the conversation so far and includes the whole
+            conversation history up to that point.
+        timeout: How many seconds to wait for the API to send data before
+            giving up and raising an error.
+        loop: The event loop used for asay.
+        **kwargs: Keyword arguments to pass into requests.Session.get and
+            aiohttp.ClientSession.get
+    """
+    self.session = requests.Session()
+    loop = kwargs.pop('loop', asyncio.get_event_loop())
+    self.asession = aiohttp.ClientSession(loop=loop)
+    self.key = key
+    self.data = {}
+    if 'cs' in kwargs:
+        self.data['cs'] = kwargs.pop('cs')
+    self.timeout = kwargs.pop('timeout', None)
+    self.kwargs = kwargs
 
 
 @asyncio.coroutine
@@ -41,9 +70,15 @@ def asay(self, text, **vtext):
     return (yield from self._aquery(params))
 
 
+def close(self):
+    """Close the connections to the API."""
+    self.session.close()
+    self.asession.close()
+
+
 @asyncio.coroutine
 def _aquery(self, params):
-    """Get Cleverbot's reply and store it in a dictionary.
+    """Get Cleverbot's reply and store the data in a dictionary.
 
     Keys:
         cs: State of the conversation so far, which contains an encoded copy of
@@ -67,10 +102,14 @@ def _aquery(self, params):
             that if an interaction didn't occur, the interaction_other will not
             be defined.
     """
-    session = aiohttp.ClientSession(loop=self.loop)
+    headers = {
+        'User-Agent': 'cleverbot.py/' + __version__ + ' '
+        '(+https://github.com/orlnub123/cleverbot.py)'
+    }
     try:
-        reply = yield from session.get(
-            self.url, params=params, timeout=self.timeout, **self.kwargs)
+        reply = yield from self.asession.get(
+            self.url, params=params, headers=headers, timeout=self.timeout,
+            **self.kwargs)
     except asyncio.TimeoutError:
         raise Timeout(self.timeout)
     else:
@@ -84,5 +123,3 @@ def _aquery(self, params):
                 return data['output']
             else:
                 raise APIError(data['error'], data['status'])
-    finally:
-        session.close()
