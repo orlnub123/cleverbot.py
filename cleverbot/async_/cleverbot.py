@@ -1,14 +1,16 @@
-import requests
+import asyncio
 
-from . import __version__
-from .abc import CleverbotBase
-from .errors import APIError, DecodeError, Timeout
+import aiohttp
+
+from .. import __version__
+from ..abc import CleverbotBase
+from ..errors import APIError, DecodeError, Timeout
 
 
 class Cleverbot(CleverbotBase):
-    """A Cleverbot API wrapper."""
+    """An asynchronous Cleverbot API wrapper."""
 
-    def __init__(self, key, **kwargs):
+    def __init__(self, key, *, cs=None, timeout=None, loop=None):
         """Initialize Cleverbot with the given arguments.
 
         Arguments:
@@ -18,17 +20,17 @@ class Cleverbot(CleverbotBase):
                 conversation history up to that point.
             timeout: How many seconds to wait for the API to send data before
                 giving up and raising an error.
+            loop: The event loop used for the asynchronous requests.
         """
         self.key = key
         self.data = {}
-        if 'cs' in kwargs:
-            self.data['cs'] = kwargs.pop('cs')
-        self.timeout = kwargs.pop('timeout', None)
-        self.session = requests.Session()
-        if kwargs:
-            raise TypeError("__init__() got an unexpected keyword argument "
-                            + repr(list(kwargs.keys())[0]))
+        if cs is not None:
+            self.data['cs'] = cs
+        self.timeout = timeout
+        loop = asyncio.get_event_loop() if loop is None else loop
+        self.session = aiohttp.ClientSession(loop=loop)
 
+    @asyncio.coroutine
     def say(self, input=None, **kwargs):
         """Talk to Cleverbot.
 
@@ -53,9 +55,10 @@ class Cleverbot(CleverbotBase):
         """
         params = {
             'key': self.key,
-            'input': input,
             'wrapper': 'cleverbot.py'
         }
+        if input is not None:
+            params['input'] = input
         try:
             params['cs'] = self.data['cs']
         except KeyError:
@@ -68,21 +71,23 @@ class Cleverbot(CleverbotBase):
             '(+https://github.com/orlnub123/cleverbot.py)'
         }
         try:
-            reply = self.session.get(
+            reply = yield from self.session.get(
                 self.url, params=params, headers=headers, timeout=self.timeout)
-        except requests.Timeout:
+        except asyncio.TimeoutError:
             raise Timeout(self.timeout)
         else:
             try:
-                data = reply.json()
+                data = yield from reply.json()
             except ValueError as error:
                 raise DecodeError(error)
             else:
-                if reply.status_code == 200:
+                if reply.status == 200:
                     self.data = data
                     return data['output']
                 else:
                     raise APIError(data['error'], data['status'])
+        finally:
+            reply.release()
 
     def close(self):
         """Close the connection to the API."""

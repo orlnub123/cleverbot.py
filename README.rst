@@ -27,41 +27,30 @@ Example
 Installing
 ----------
 
-Install it from PyPI with pip:
+Install it normally from PyPI with pip:
 
 ::
 
     pip install cleverbot.py
 
-Or install it from GitHub using git:
-
-::
-
-    git clone https://github.com/orlnub123/cleverbot.py
-    cd cleverbot.py
-    python setup.py install
-
-If you don't have pip or git you can also download the source and run ``python
-setup.py install`` on it.
-
-To install Cleverbot with asynchronous support you'll have to use pip and be on
-Python 3.4.2+.
+Or install it with the asynchronous dependencies (Python 3.4.2+ only):
 
 ::
 
     pip install cleverbot.py[async]
 
-This is not required if you already have aiohttp 1.0.0 or later.
-
 **Requirements:**
 
 - Python 3.2+ or 2.6+
-- `A Cleverbot API key <http://www.cleverbot.com/api/>`_
+- `A Cleverbot API key <https://www.cleverbot.com/api/>`_
 
 **Dependencies:**
 
 - requests 1.0.0+
-- aiohttp 1.0.0+ (Optional, for asynchronous support)
+
++ **Asynchronous:**
+
+  - aiohttp 1.0.0+
 
 Usage
 -----
@@ -72,8 +61,6 @@ First import the package:
 
     import cleverbot
 
---------------
-
 Then initialize Cleverbot with your API key and optionally a cleverbot state
 and or timeout:
 
@@ -81,14 +68,20 @@ and or timeout:
 
     cb = cleverbot.Cleverbot('YOUR_API_KEY', cs='76nxdxIJ02AAA', timeout=60)
 
-The cleverbot state is the encoded state of the conversation so far and
-includes the whole conversation history up to that point.
+The cleverbot state is the encoded state of the conversation that you get from
+talking to Cleverbot and includes the whole conversation history.
+
+If you have the asynchronous dependencies and want to use Cleverbot
+asynchronously import ``cleverbot.async_`` and initialize Cleverbot from
+``cleverbot.async_.Cleverbot`` instead. The only differences are that ``say``
+is a coroutine and that you can pass an event loop to Cleverbot with a ``loop``
+keyword argument.
 
 --------------
 
 You can now start talking to Cleverbot.
 
-Get the reply from the input:
+Get the reply from the request:
 
 .. code:: py
 
@@ -101,19 +94,10 @@ Or alternatively get it later:
     cb.say("Hello")
     reply = cb.output
 
-If you want to talk to Cleverbot asynchronously use ``asay`` instead:
-
-.. code:: py
-
-    await cb.asay("Hello")
-
-``asay`` only works if you're on Python 3.4.2+ and have aiohttp installed.
-Experience with asyncio is recommended as you'll have to run it in an event
-loop.
-
-A big benefit of using ``asay`` is that it allows multiple requests to be sent
-at once instead of waiting for the previous request to return a response which
-can take significantly longer.
+You can also pass in keyword arguments such as ``cs`` to change the
+conversation, or ``vtext`` to change the current conversation's history. Read
+the "Parameters" section of `the official Cleverbot API docs
+<https://www.cleverbot.com/api/howto/>`_ for more information.
 
 --------------
 
@@ -127,7 +111,8 @@ As an example:
 ``cleverbot.errors.APIError: Missing or invalid API key or POST request, please
 visit www.cleverbot.com/api``
 
-You can get the error message and additionally the HTTP status like so:
+You can get the error message and additionally the HTTP status from the error
+like so:
 
 .. code:: py
 
@@ -136,76 +121,39 @@ You can get the error message and additionally the HTTP status like so:
     except cleverbot.APIError as error:
         print(error.error, error.status)
 
-This is also applicable to ``Timeout`` where you can get the defined timeout
+This is similar for ``Timeout`` where you can get the defined timeout
 value with ``error.timeout``.
 
-Also, all Cleverbot errors subclass ``CleverbotError`` so you can use it to
-catch everything Cleverbot related.
+Additionally, all Cleverbot errors subclass ``CleverbotError`` so you can use
+it to catch every Cleverbot related error.
 
 --------------
 
-Print out all of the data Cleverbot gained from the previous conversation:
+To access the data gained from the conversations you can either get them from
+an attribute as shown previously or directly get them from ``cb.data``:
 
 .. code:: py
 
-    print(cb.data)
-
-Take note of the ``cs`` key as we'll use it to save the conversation in the
-next section.
-
-To access the data you can either get them from an attribute or directly get
-them from ``cb.data``:
-
-.. code:: py
-
-    cb.output == cb.data['output']
+    cb.conversation_id == cb.data['conversation_id']
 
 However modifying the data with an attribute is only applicable to the
-cleverbot state.
+cleverbot state by using the ``cs`` attribute.
 
-To get a list of all of the keys' descriptions either take a look at the
-``_query`` method's docstring in cleverbot.py or go to the 'JSON Reply' section
-in `the official Cleverbot API docs <https://www.cleverbot.com/api/howto/>`_.
+For a list of all of the data's items' descriptions go to the "JSON Reply"
+section in `the official Cleverbot API docs
+<https://www.cleverbot.com/api/howto/>`_.
 
---------------
-
-Save the conversation in preparation for a reset:
-
-.. code:: py
-
-    cs = cb.cs
-
-Reset Cleverbot, deleting all of the data it's gained from the previous
-conversations:
+To reset the data you can simply do the following:
 
 .. code:: py
 
     cb.reset()
 
-Note that if you try to get the cleverbot state now you'll get an error:
-
-``AttributeError: 'Cleverbot' object has no attribute 'cs'``
-
-Now start right where you left off by setting the cleverbot state you saved
-earlier:
-
-.. code:: py
-
-    cb.cs = cs
-
-Or by setting it when creating a new Cleverbot instance:
-
-.. code:: py
-
-    cb = cleverbot.Cleverbot('YOUR_API_KEY', cs=cs)
-
 --------------
 
-When you're all done, close Cleverbot's connection to the API:
+When you're done with the current instance of Cleverbot, close Cleverbot's
+connection to the API:
 
 .. code:: py
 
     cb.close()
-
-This should only be done when you're not going to use the current instance of
-Cleverbot anymore.

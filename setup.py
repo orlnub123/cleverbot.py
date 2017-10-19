@@ -19,12 +19,12 @@ setup(
     name='cleverbot.py',
     version=version,
     description='A Cleverbot API wrapper for Python with asynchronous '
-    'functionality.',
+                'functionality.',
     long_description=readme,
     url='https://github.com/orlnub123/cleverbot.py',
     author='orlnub123',
     license='MIT',
-    packages=['cleverbot'],
+    packages=['cleverbot', 'cleverbot.async_'],
     install_requires=['requests>=1.0.0'],
     extras_require={'async': ['aiohttp>=1.0.0']},
     classifiers=[
@@ -42,6 +42,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Internet',
         'Topic :: Games/Entertainment',
         'Topic :: Software Development :: Libraries :: Python Modules',

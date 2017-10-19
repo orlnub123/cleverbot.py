@@ -22,7 +22,7 @@ class APIError(CleverbotError):
 class DecodeError(CleverbotError):
     """Raised when a decode error occurs while reading the reply.
 
-    This shouldn't happen.
+    Reset Cleverbot to fix it.
     """
 
 
@@ -31,5 +31,5 @@ class Timeout(CleverbotError):
 
     def __init__(self, timeout):
         super(Timeout, self).__init__(
-            "Request timed out after {} seconds".format(timeout))
+            "Request timed out after {0} seconds".format(timeout))
         self.timeout = timeout
