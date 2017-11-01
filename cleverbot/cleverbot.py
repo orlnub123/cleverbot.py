@@ -8,7 +8,7 @@ from .errors import APIError, DecodeError, Timeout
 class Cleverbot(CleverbotBase):
     """A Cleverbot API wrapper."""
 
-    def __init__(self, key, **kwargs):
+    def __init__(self, key, **kwargs):  # Python 2 compatible keyword-only args
         """Initialize Cleverbot with the given arguments.
 
         Arguments:
@@ -26,8 +26,8 @@ class Cleverbot(CleverbotBase):
         self.timeout = kwargs.pop('timeout', None)
         self.session = requests.Session()
         if kwargs:
-            raise TypeError("__init__() got an unexpected keyword argument "
-                            + repr(list(kwargs.keys())[0]))
+            message = "__init__() got an unexpected keyword argument '{0}'"
+            raise TypeError(message.format(next(iter(kwargs))))
 
     def say(self, input=None, **kwargs):
         """Talk to Cleverbot.
@@ -42,24 +42,22 @@ class Cleverbot(CleverbotBase):
 
         Raises:
             APIError: A Cleverbot API error occurred.
-                401: Unauthorised due to invalid API key.
-                404: API not found.
-                413: Request too large if you send a request over 16KB.
-                502 or 504: Unable to get reply from API server, please contact
-                    us.
-                503: Too many requests from a single IP address or API key.
+                Status codes:
+                    401: Unauthorised due to invalid API key.
+                    404: API not found.
+                    413: Request too large if you send a request over 64Kb.
+                    502 or 504: Unable to get reply from API server, please
+                        contact us.
+                    503: Too many requests from a single IP address or API key.
             DecodeError: An error occurred while reading the reply.
             Timeout: The request timed out.
         """
         params = {
             'key': self.key,
             'input': input,
+            'cs': self.data.get('cs'),
             'wrapper': 'cleverbot.py'
         }
-        try:
-            params['cs'] = self.data['cs']
-        except KeyError:
-            pass
         if kwargs:
             params.update(kwargs)
 

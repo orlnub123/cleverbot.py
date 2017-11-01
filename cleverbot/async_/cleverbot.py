@@ -44,12 +44,13 @@ class Cleverbot(CleverbotBase):
 
         Raises:
             APIError: A Cleverbot API error occurred.
-                401: Unauthorised due to invalid API key.
-                404: API not found.
-                413: Request too large if you send a request over 16KB.
-                502 or 504: Unable to get reply from API server, please contact
-                    us.
-                503: Too many requests from a single IP address or API key.
+                Status codes:
+                    401: Unauthorised due to invalid API key.
+                    404: API not found.
+                    413: Request too large if you send a request over 64Kb.
+                    502 or 504: Unable to get reply from API server, please
+                        contact us.
+                    503: Too many requests from a single IP address or API key.
             DecodeError: An error occurred while reading the reply.
             Timeout: The request timed out.
         """
@@ -57,12 +58,14 @@ class Cleverbot(CleverbotBase):
             'key': self.key,
             'wrapper': 'cleverbot.py'
         }
+        # aiohttp doesn't filter None values
         if input is not None:
             params['input'] = input
         try:
             params['cs'] = self.data['cs']
         except KeyError:
             pass
+        # Python 3.4 compatibility
         if kwargs:
             params.update(kwargs)
 
@@ -86,8 +89,6 @@ class Cleverbot(CleverbotBase):
                     return data['output']
                 else:
                     raise APIError(data['error'], data['status'])
-        finally:
-            reply.release()
 
     def close(self):
         """Close the connection to the API."""

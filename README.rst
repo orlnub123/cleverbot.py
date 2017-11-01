@@ -27,7 +27,8 @@ Example
 Installing
 ----------
 
-Install it normally from PyPI with pip:
+Install it normally from `PyPI <https://pypi.org/project/cleverbot.py/>`_ with
+pip:
 
 ::
 
@@ -41,7 +42,7 @@ Or install it with the asynchronous dependencies (Python 3.4.2+ only):
 
 **Requirements:**
 
-- Python 3.2+ or 2.6+
+- Python 3.1+ or 2.6+
 - `A Cleverbot API key <https://www.cleverbot.com/api/>`_
 
 **Dependencies:**
@@ -95,9 +96,10 @@ Or alternatively get it later:
     reply = cb.output
 
 You can also pass in keyword arguments such as ``cs`` to change the
-conversation, or ``vtext`` to change the current conversation's history. Read
-the "Parameters" section of `the official Cleverbot API docs
-<https://www.cleverbot.com/api/howto/>`_ for more information.
+conversation, ``vtext`` to change the current conversation's history, or even
+``cb_settings_tweak`` to change Cleverbot's mood. Read the "Parameters" section
+of `the official Cleverbot API docs <https://www.cleverbot.com/api/howto/>`_
+for more information.
 
 --------------
 
@@ -136,10 +138,10 @@ an attribute as shown previously or directly get them from ``cb.data``:
 
     cb.conversation_id == cb.data['conversation_id']
 
-However modifying the data with an attribute is only applicable to the
-cleverbot state by using the ``cs`` attribute.
+Note that every attribute except for cs (i.e., the cleverbot state) is
+read-only and will get shadowed if you set it to something.
 
-For a list of all of the data's items' descriptions go to the "JSON Reply"
+For a list of all of the data and their descriptions go to the "JSON Reply"
 section in `the official Cleverbot API docs
 <https://www.cleverbot.com/api/howto/>`_.
 
