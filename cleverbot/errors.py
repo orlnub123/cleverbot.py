@@ -3,14 +3,8 @@ class CleverbotError(Exception):
 
 
 class APIError(CleverbotError):
-    """Raised when a Cleverbot API error occurs.
-
-    Errors:
-        401: Unauthorised due to invalid API key.
-        404: API not found.
-        413: Request too large if you send a request over 16KB.
-        502 or 504: Unable to get reply from API server, please contact us.
-        503: Too many requests from a single IP address or API key.
+    """Raised when a Cleverbot API error occurs. See the official Cleverbot
+    documentation for an updated list of all the possible errors.
     """
 
     def __init__(self, error, status):
@@ -20,14 +14,13 @@ class APIError(CleverbotError):
 
 
 class DecodeError(CleverbotError):
-    """Raised when a decode error occurs while reading the reply.
-
-    Reset Cleverbot to fix it.
+    """Raised when a decode error occurs while reading the reply. Reset
+    Cleverbot or the respective conversation to fix it.
     """
 
 
 class Timeout(CleverbotError):
-    """Raised when the request times out after the specified time."""
+    """Raised when the request takes longer than the specified time."""
 
     def __init__(self, timeout):
         super(Timeout, self).__init__(

@@ -1,34 +1,14 @@
 import asyncio
+import pickle
 
 import aiohttp
 
 from .. import __version__
-from ..abc import CleverbotBase
+from ..base import CleverbotBase, ConversationBase
 from ..errors import APIError, DecodeError, Timeout
 
 
-class Cleverbot(CleverbotBase):
-    """An asynchronous Cleverbot API wrapper."""
-
-    def __init__(self, key, *, cs=None, timeout=None, loop=None):
-        """Initialize Cleverbot with the given arguments.
-
-        Arguments:
-            key: The key argument is always required. It is your API key.
-            cs: The cs argument stands for "cleverbot state". It is the encoded
-                state of the conversation so far and includes the whole
-                conversation history up to that point.
-            timeout: How many seconds to wait for the API to send data before
-                giving up and raising an error.
-            loop: The event loop used for the asynchronous requests.
-        """
-        self.key = key
-        self.data = {}
-        if cs is not None:
-            self.data['cs'] = cs
-        self.timeout = timeout
-        loop = asyncio.get_event_loop() if loop is None else loop
-        self.session = aiohttp.ClientSession(loop=loop)
+class SayMixin:
 
     @asyncio.coroutine
     def say(self, input=None, **kwargs):
@@ -44,13 +24,6 @@ class Cleverbot(CleverbotBase):
 
         Raises:
             APIError: A Cleverbot API error occurred.
-                Status codes:
-                    401: Unauthorised due to invalid API key.
-                    404: API not found.
-                    413: Request too large if you send a request over 64Kb.
-                    502 or 504: Unable to get reply from API server, please
-                        contact us.
-                    503: Too many requests from a single IP address or API key.
             DecodeError: An error occurred while reading the reply.
             Timeout: The request timed out.
         """
@@ -86,10 +59,67 @@ class Cleverbot(CleverbotBase):
             else:
                 if reply.status == 200:
                     self.data = data
-                    return data['output']
+                    return data.get('output')
                 else:
-                    raise APIError(data['error'], data['status'])
+                    raise APIError(data.get('error'), data.get('status'))
+
+
+class Cleverbot(SayMixin, CleverbotBase):
+    """An asynchronous Cleverbot API wrapper."""
+
+    def __init__(self, *args, loop=None, **kwargs):
+        """Initialize Cleverbot with the given arguments.
+
+        Arguments:
+            key: The key argument is always required. It is your API key.
+            cs: The cs argument stands for "cleverbot state". It is the encoded
+                state of the conversation so far and includes the whole
+                conversation history up to that point.
+            timeout: How many seconds to wait for the API to respond before
+                giving up and raising an error.
+            loop: The event loop used for the asynchronous requests.
+        """
+        super().__init__(*args, **kwargs)
+        loop = asyncio.get_event_loop() if loop is None else loop
+        self.session = aiohttp.ClientSession(loop=loop)
+
+    def conversation(self, name=None, **kwargs):
+        """Make a new conversation.
+
+        Arguments:
+            name: The key for the dictionary the conversation will be stored as
+                in conversations. If None the conversation will be stored as a
+                list instead. Mixing both types results in an error.
+            **kwargs: Keyword arguments to pass into the new conversation.
+                These accept the same arguments as Cleverbot.
+
+        Returns:
+            The new conversation.
+        """
+        convo = Conversation(self, **kwargs)
+        super().conversation(name, convo)
+        return convo
 
     def close(self):
-        """Close the connection to the API."""
+        """Close Cleverbot's connection to the API."""
         self.session.close()
+
+
+class Conversation(SayMixin, ConversationBase):
+    pass
+
+
+def load(file):
+    """Load and return the previously saved Cleverbot with its conversations.
+
+    Arguments:
+        file: The file object to load Cleverbot and its conversations from.
+
+    Returns:
+        A new Cleverbot instance.
+    """
+    cleverbot_kwargs, convos = pickle.load(file)
+    cleverbot = Cleverbot(**cleverbot_kwargs)
+    for convo_kwargs in convos:
+        cleverbot.conversation(**convo_kwargs)
+    return cleverbot
