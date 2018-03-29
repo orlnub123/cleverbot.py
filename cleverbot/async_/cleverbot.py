@@ -17,6 +17,7 @@ class SayMixin:
         Arguments:
             input: The input argument is what you want to say to Cleverbot,
                 such as "hello".
+            tweak1-3: Changes Cleverbot's mood.
             **kwargs: Keyword arguments to update the request parameters with.
 
         Returns:
@@ -38,8 +39,18 @@ class SayMixin:
             params['cs'] = self.data['cs']
         except KeyError:
             pass
-        # Python 3.4 compatibility
+        for tweak in ('tweak1', 'tweak2', 'tweak3'):
+            if getattr(self, tweak, None) is not None:
+                params['cb_settings_' + tweak] = getattr(self, tweak)
         if kwargs:
+            for tweak in ('tweak1', 'tweak2', 'tweak3'):
+                setting = 'cb_settings_' + tweak
+                if tweak in kwargs and setting not in kwargs:
+                    kwargs[setting] = kwargs.pop(tweak)
+                elif tweak in kwargs and setting in kwargs:
+                    message = "Supplied both {!r} and {!r}"
+                    raise TypeError(message.format(tweak, setting))
+            # Python 3.4 compatibility
             params.update(kwargs)
 
         headers = {

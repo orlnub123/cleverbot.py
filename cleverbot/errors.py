@@ -7,8 +7,9 @@ class APIError(CleverbotError):
     documentation for an updated list of all the possible errors.
     """
 
-    def __init__(self, error, status):
-        super(APIError, self).__init__(error)
+    def __init__(self, error=None, status=None):
+        message = "An unspecified error occurred"
+        super(APIError, self).__init__(error if error is not None else message)
         self.error = error
         self.status = status
 

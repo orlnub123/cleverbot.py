@@ -10,7 +10,7 @@ class AttributeMixin(object):
         try:
             return self.data[attr]
         except KeyError:
-            message = "'{0}' object has no attribute '{1}'"
+            message = "{0!r} object has no attribute {1!r}"
             raise AttributeError(message.format(self.__class__.__name__, attr))
 
     @property
@@ -35,9 +35,11 @@ class CleverbotBase(AttributeMixin):
         if 'cs' in kwargs:
             self.data['cs'] = kwargs.pop('cs')
         self.timeout = kwargs.pop('timeout', None)
+        for tweak in ('tweak1', 'tweak2', 'tweak3'):
+            setattr(self, tweak, kwargs.pop(tweak, None))
         self.conversations = None
         if kwargs:
-            message = "__init__() got an unexpected keyword argument '{0}'"
+            message = "__init__() got an unexpected keyword argument {0!r}"
             raise TypeError(message.format(next(iter(kwargs))))
 
     def conversation(self, name, convo):
@@ -70,19 +72,22 @@ class CleverbotBase(AttributeMixin):
         Arguments:
             file: A file object that accepts bytes to save the data to.
         """
-        obj = ({'key': self.key, 'cs': self.cs, 'timeout': self.timeout}, [])
-        for convo in self.conversations:
-            if isinstance(self.conversations, dict):
-                name, convo = convo, self.conversations[convo]
-                convo_dict = {'name': name, 'cs': convo.data.get('cs')}
-            else:
-                convo_dict = {'cs': convo.data.get('cs')}
-            for item in ('key', 'timeout'):
-                try:
-                    convo_dict[item] = convo.__dict__[item]
-                except KeyError:
-                    pass
-            obj[1].append(convo_dict)
+        obj = ({'key': self.key, 'cs': self.cs, 'timeout': self.timeout,
+                'tweak1': self.tweak1, 'tweak2': self.tweak2,
+                'tweak3': self.tweak3}, [])
+        if self.conversations is not None:
+            for convo in self.conversations:
+                if isinstance(self.conversations, dict):
+                    name, convo = convo, self.conversations[convo]
+                    convo_dict = {'name': name, 'cs': convo.data.get('cs')}
+                else:
+                    convo_dict = {'cs': convo.data.get('cs')}
+                for item in ('key', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
+                    try:
+                        convo_dict[item] = convo.__dict__[item]
+                    except KeyError:
+                        pass
+                obj[1].append(convo_dict)
         pickle.dump(obj, file, pickle.HIGHEST_PROTOCOL)
 
     def load(self, file):
@@ -104,12 +109,12 @@ class ConversationBase(AttributeMixin):
     def __init__(self, cleverbot, **kwargs):
         self.cleverbot = cleverbot
         self.data = {}
-        for item in ('key', 'cs', 'timeout'):
+        for item in ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
             if item in kwargs:
                 setattr(self, item, kwargs.pop(item))
         self.session = cleverbot.session
         if kwargs:
-            message = "__init__() got an unexpected keyword argument '{0}'"
+            message = "__init__() got an unexpected keyword argument {0!r}"
             raise TypeError(message.format(next(iter(kwargs))))
 
     @property
@@ -127,6 +132,30 @@ class ConversationBase(AttributeMixin):
     @timeout.setter
     def timeout(self, value):
         self.__dict__['timeout'] = value
+
+    @property
+    def tweak1(self):
+        return self.__dict__.get('tweak1', self.cleverbot.tweak1)
+
+    @tweak1.setter
+    def tweak1(self, value):
+        self.__dict__['tweak1'] = value
+
+    @property
+    def tweak2(self):
+        return self.__dict__.get('tweak2', self.cleverbot.tweak2)
+
+    @tweak2.setter
+    def tweak2(self, value):
+        self.__dict__['tweak2'] = value
+
+    @property
+    def tweak3(self):
+        return self.__dict__.get('tweak3', self.cleverbot.tweak3)
+
+    @tweak3.setter
+    def tweak3(self, value):
+        self.__dict__['tweak3'] = value
 
     def reset(self):
         self.data = {}

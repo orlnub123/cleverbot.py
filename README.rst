@@ -69,12 +69,12 @@ asynchronously import it as below instead:
 
     from cleverbot import async_ as cleverbot
 
-Then initialize Cleverbot with your API key and optionally a cleverbot state
-and or timeout:
+Then initialize Cleverbot with your API key and optionally a cleverbot state,
+timeout and or tweak if you want to adjust Cleverbot's mood:
 
 .. code:: py
 
-    cb = cleverbot.Cleverbot('YOUR_API_KEY', cs='76nxdxIJ02AAA', timeout=60)
+    cb = cleverbot.Cleverbot('YOUR_API_KEY', cs='76nxdxIJ02AAA', timeout=60, tweak1=0, tweak2=100, tweak3=100)
 
 The cleverbot state is the encoded state of the conversation that you get from
 talking to Cleverbot and includes the whole conversation history.
@@ -94,9 +94,9 @@ Talk straight to Cleverbot:
 
 You can pass in keyword arguments to ``say`` such as ``cs`` to change the
 conversation, ``vtext`` to change the current conversation's history, or even
-``cb_settings_tweak`` to change Cleverbot's mood. Read the "Parameters" section
-of `the official Cleverbot API docs <https://www.cleverbot.com/api/howto/>`_
-for more information.
+``tweak`` as an alias for ``cb_settings_tweak`` to change Cleverbot's mood.
+Read the "Parameters" section of `the official Cleverbot API docs
+<https://www.cleverbot.com/api/howto/>`_ for more information.
 
 Alternatively, start a new conversation and talk from it:
 
@@ -191,8 +191,8 @@ you can use ``cb.save``:
     with open('cleverbot.txt', 'wb') as file:
         cb.save(file)
 
-This saves the key and timeout you've given to Cleverbot and its conversations
-and also the current cleverbot state of each.
+This saves the key, timeout and tweaks you've given to Cleverbot and its
+conversations and also the current cleverbot state of each.
 
 In order to load and recreate the previously saved state as a new Cleverbot
 instance use ``cleverbot.load``:
