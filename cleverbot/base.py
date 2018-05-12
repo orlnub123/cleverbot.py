@@ -5,6 +5,8 @@ from .utils import convo_property, error_on_kwarg
 
 class AttributeMixin(object):
 
+    __slots__ = ()
+
     url = 'https://www.cleverbot.com/getreply'
 
     def __getattr__(self, attr):
@@ -83,8 +85,10 @@ class CleverbotBase(AttributeMixin):
                 else:
                     convo_dict = {'cs': convo.data.get('cs')}
                 items = ('key', 'timeout', 'tweak1', 'tweak2', 'tweak3')
-                for item in filter(lambda item: item in vars(convo), items):
-                    convo_dict[item] = vars(convo)[item]
+                _items = map(lambda item: '_' + item, items)
+                for item, _item in zip(items, _items):
+                    if hasattr(convo, _item):
+                        convo_dict[item] = getattr(convo, _item)
                 obj[1].append(convo_dict)
         pickle.dump(obj, file, pickle.HIGHEST_PROTOCOL)
 
@@ -103,6 +107,9 @@ class CleverbotBase(AttributeMixin):
 
 class ConversationBase(AttributeMixin):
     """Base class for Conversation."""
+
+    __slots__ = ('cleverbot', 'data', '_key', '_timeout', '_tweak1', '_tweak2',
+                 '_tweak3', 'session')
 
     def __init__(self, cleverbot, **kwargs):
         self.cleverbot = cleverbot
@@ -124,6 +131,8 @@ class ConversationBase(AttributeMixin):
 
 
 class SayMixinBase(object):
+
+    __slots__ = ()
 
     def _get_params(self, input, kwargs):
         params = {

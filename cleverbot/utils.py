@@ -5,7 +5,7 @@ def error_on_kwarg(func, kwargs):
 
 
 def convo_property(name):
-    import operator
-    getter = lambda self: vars(self).get(name, getattr(self.cleverbot, name))
-    setter = lambda self, value: operator.setitem(vars(self), name, value)
+    _name = '_' + name
+    getter = lambda self: getattr(self, _name, getattr(self.cleverbot, name))
+    setter = lambda self, value: setattr(self, _name, value)
     return property(getter, setter)

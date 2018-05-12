@@ -10,6 +10,8 @@ from ..errors import APIError, DecodeError, Timeout
 
 class SayMixin(SayMixinBase):
 
+    __slots__ = ()
+
     @asyncio.coroutine
     def say(self, input=None, **kwargs):
         """Talk to Cleverbot.
@@ -91,7 +93,8 @@ class Cleverbot(SayMixin, CleverbotBase):
 
 
 class Conversation(SayMixin, ConversationBase):
-    pass
+
+    __slots__ = ()
 
 
 def load(file):
