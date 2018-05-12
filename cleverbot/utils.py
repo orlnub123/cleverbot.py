@@ -8,4 +8,5 @@ def convo_property(name):
     _name = '_' + name
     getter = lambda self: getattr(self, _name, getattr(self.cleverbot, name))
     setter = lambda self, value: setattr(self, _name, value)
-    return property(getter, setter)
+    deleter = lambda self: delattr(self, _name)
+    return property(getter, setter, deleter)
