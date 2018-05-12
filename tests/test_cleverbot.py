@@ -11,7 +11,7 @@ def cb(request, monkeypatch):
     cb = cleverbot.Cleverbot('API_KEY', cs='76nxdxIJ02AAA', timeout=60,
                              tweak1=25, tweak2=50, tweak3=75)
     if hasattr(request, 'param'):
-        def mock_get(url, params, headers, timeout):
+        def mock_get(url, params, timeout):
 
             class MockResponse(object):
                 def __init__(self):
@@ -88,7 +88,7 @@ class TestCleverbot:
     @pytest.mark.parametrize(
         'cb', [
             {'params': {
-                'input': None, 'key': 'API_KEY', 'cs': '76nxdxIJ02AAA',
+                'key': 'API_KEY', 'cs': '76nxdxIJ02AAA',
                 'wrapper': 'cleverbot.py', 'cb_settings_tweak1': 25,
                 'cb_settings_tweak2': 50, 'cb_settings_tweak3': 75
             }}
@@ -207,7 +207,7 @@ class TestConversation:
         convo = cb.conversation(key='API_KEY', cs='76nxdxIJ02AAA', timeout=60,
                                 tweak1=25, tweak2=50, tweak3=75)
         if hasattr(request, 'param'):
-            def mock_get(url, params, headers, timeout):
+            def mock_get(url, params, timeout):
 
                 class MockResponse(object):
                     def __init__(self):
@@ -253,7 +253,7 @@ class TestConversation:
     @pytest.mark.parametrize(
         'convo', [
             {'params': {
-                'input': None, 'key': 'API_KEY', 'cs': '76nxdxIJ02AAA',
+                'key': 'API_KEY', 'cs': '76nxdxIJ02AAA',
                 'wrapper': 'cleverbot.py', 'cb_settings_tweak1': 25,
                 'cb_settings_tweak2': 50, 'cb_settings_tweak3': 75
             }}

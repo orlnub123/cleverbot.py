@@ -12,7 +12,7 @@ def cb(request, monkeypatch):
                              tweak1=25, tweak2=50, tweak3=75)
     if hasattr(request, 'param'):
         @asyncio.coroutine
-        def mock_get(url, params, headers, timeout):
+        def mock_get(url, params, timeout):
 
             class MockResponse(object):
                 def __init__(self):
@@ -220,7 +220,7 @@ class TestConversation:
                                 tweak1=25, tweak2=50, tweak3=75)
         if hasattr(request, 'param'):
             @asyncio.coroutine
-            def mock_get(url, params, headers, timeout):
+            def mock_get(url, params, timeout):
 
                 class MockResponse(object):
                     def __init__(self):
