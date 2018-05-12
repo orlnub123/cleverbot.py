@@ -1,14 +1,14 @@
 import asyncio
-import pickle
 
 import aiohttp
 
 from .. import __version__
-from ..base import CleverbotBase, ConversationBase
+from ..base import (CleverbotBase, ConversationBase, SayMixinBase,
+                    load as base_load)
 from ..errors import APIError, DecodeError, Timeout
 
 
-class SayMixin:
+class SayMixin(SayMixinBase):
 
     @asyncio.coroutine
     def say(self, input=None, **kwargs):
@@ -28,38 +28,10 @@ class SayMixin:
             DecodeError: An error occurred while reading the reply.
             Timeout: The request timed out.
         """
-        params = {
-            'key': self.key,
-            'wrapper': 'cleverbot.py'
-        }
-        # aiohttp doesn't filter None values
-        if input is not None:
-            params['input'] = input
-        try:
-            params['cs'] = self.data['cs']
-        except KeyError:
-            pass
-        for tweak in ('tweak1', 'tweak2', 'tweak3'):
-            if getattr(self, tweak, None) is not None:
-                params['cb_settings_' + tweak] = getattr(self, tweak)
-        if kwargs:
-            for tweak in ('tweak1', 'tweak2', 'tweak3'):
-                setting = 'cb_settings_' + tweak
-                if tweak in kwargs and setting not in kwargs:
-                    kwargs[setting] = kwargs.pop(tweak)
-                elif tweak in kwargs and setting in kwargs:
-                    message = "Supplied both {!r} and {!r}"
-                    raise TypeError(message.format(tweak, setting))
-            # Python 3.4 compatibility
-            params.update(kwargs)
-
-        headers = {
-            'User-Agent': 'cleverbot.py/' + __version__ + ' '
-            '(+https://github.com/orlnub123/cleverbot.py)'
-        }
+        params = self._get_params(input, kwargs)
         try:
             reply = yield from self.session.get(
-                self.url, params=params, headers=headers, timeout=self.timeout)
+                self.url, params=params, timeout=self.timeout)
         except asyncio.TimeoutError:
             raise Timeout(self.timeout)
         else:
@@ -92,7 +64,9 @@ class Cleverbot(SayMixin, CleverbotBase):
         """
         super().__init__(*args, **kwargs)
         loop = asyncio.get_event_loop() if loop is None else loop
-        self.session = aiohttp.ClientSession(loop=loop)
+        headers = {'User-Agent': 'cleverbot.py/' + __version__ + ' '
+                   '(+https://github.com/orlnub123/cleverbot.py)'}
+        self.session = aiohttp.ClientSession(loop=loop, headers=headers)
 
     def conversation(self, name=None, **kwargs):
         """Make a new conversation.
@@ -129,8 +103,4 @@ def load(file):
     Returns:
         A new Cleverbot instance.
     """
-    cleverbot_kwargs, convos = pickle.load(file)
-    cleverbot = Cleverbot(**cleverbot_kwargs)
-    for convo_kwargs in convos:
-        cleverbot.conversation(**convo_kwargs)
-    return cleverbot
+    return base_load(Cleverbot, file)

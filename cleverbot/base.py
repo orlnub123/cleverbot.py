@@ -1,5 +1,7 @@
 import pickle
 
+from .utils import convo_property, error_on_kwarg
+
 
 class AttributeMixin(object):
 
@@ -11,7 +13,7 @@ class AttributeMixin(object):
             return self.data[attr]
         except KeyError:
             message = "{0!r} object has no attribute {1!r}"
-            raise AttributeError(message.format(self.__class__.__name__, attr))
+            raise AttributeError(message.format(type(self).__name__, attr))
 
     @property
     def cs(self):
@@ -38,9 +40,7 @@ class CleverbotBase(AttributeMixin):
         for tweak in ('tweak1', 'tweak2', 'tweak3'):
             setattr(self, tweak, kwargs.pop(tweak, None))
         self.conversations = None
-        if kwargs:
-            message = "__init__() got an unexpected keyword argument {0!r}"
-            raise TypeError(message.format(next(iter(kwargs))))
+        error_on_kwarg(self.__init__, kwargs)
 
     def conversation(self, name, convo):
         """Initialize conversations if necessary and add the conversation to
@@ -82,11 +82,9 @@ class CleverbotBase(AttributeMixin):
                     convo_dict = {'name': name, 'cs': convo.data.get('cs')}
                 else:
                     convo_dict = {'cs': convo.data.get('cs')}
-                for item in ('key', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
-                    try:
-                        convo_dict[item] = convo.__dict__[item]
-                    except KeyError:
-                        pass
+                items = ('key', 'timeout', 'tweak1', 'tweak2', 'tweak3')
+                for item in filter(lambda item: item in vars(convo), items):
+                    convo_dict[item] = vars(convo)[item]
                 obj[1].append(convo_dict)
         pickle.dump(obj, file, pickle.HIGHEST_PROTOCOL)
 
@@ -97,9 +95,9 @@ class CleverbotBase(AttributeMixin):
         Arguments:
             file: The file object to load the saved conversations from.
         """
-        convos = pickle.load(file)[1]
         self.conversations = None
-        for convo_kwargs in convos:
+        convos_kwargs = pickle.load(file)[1]
+        for convo_kwargs in convos_kwargs:
             self.conversation(**convo_kwargs)
 
 
@@ -109,53 +107,49 @@ class ConversationBase(AttributeMixin):
     def __init__(self, cleverbot, **kwargs):
         self.cleverbot = cleverbot
         self.data = {}
-        for item in ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
-            if item in kwargs:
-                setattr(self, item, kwargs.pop(item))
+        items = ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3')
+        for item in filter(lambda item: item in kwargs, items):
+            setattr(self, item, kwargs.pop(item))
         self.session = cleverbot.session
-        if kwargs:
-            message = "__init__() got an unexpected keyword argument {0!r}"
-            raise TypeError(message.format(next(iter(kwargs))))
-
-    @property
-    def key(self):
-        return self.__dict__.get('key', self.cleverbot.key)
-
-    @key.setter
-    def key(self, value):
-        self.__dict__['key'] = value
-
-    @property
-    def timeout(self):
-        return self.__dict__.get('timeout', self.cleverbot.timeout)
-
-    @timeout.setter
-    def timeout(self, value):
-        self.__dict__['timeout'] = value
-
-    @property
-    def tweak1(self):
-        return self.__dict__.get('tweak1', self.cleverbot.tweak1)
-
-    @tweak1.setter
-    def tweak1(self, value):
-        self.__dict__['tweak1'] = value
-
-    @property
-    def tweak2(self):
-        return self.__dict__.get('tweak2', self.cleverbot.tweak2)
-
-    @tweak2.setter
-    def tweak2(self, value):
-        self.__dict__['tweak2'] = value
-
-    @property
-    def tweak3(self):
-        return self.__dict__.get('tweak3', self.cleverbot.tweak3)
-
-    @tweak3.setter
-    def tweak3(self, value):
-        self.__dict__['tweak3'] = value
+        error_on_kwarg(self.__init__, kwargs)
 
     def reset(self):
         self.data = {}
+
+    key = convo_property('key')
+    timeout = convo_property('timeout')
+    tweak1 = convo_property('tweak1')
+    tweak2 = convo_property('tweak2')
+    tweak3 = convo_property('tweak3')
+
+
+class SayMixinBase(object):
+
+    def _get_params(self, input, kwargs):
+        params = {
+            'key': self.key,
+            'input': input,
+            'cs': self.data.get('cs'),
+            'cb_settings_tweak1': self.tweak1,
+            'cb_settings_tweak2': self.tweak2,
+            'cb_settings_tweak3': self.tweak3,
+            'wrapper': 'cleverbot.py'
+        }
+        tweaks = ('tweak1', 'tweak2', 'tweak3')
+        for tweak in filter(lambda tweak: tweak in kwargs, tweaks):
+            setting = 'cb_settings_' + tweak
+            if setting in kwargs:
+                message = "Supplied both {0!r} and {1!r}"
+                raise TypeError(message.format(tweak, setting))
+            kwargs[setting] = kwargs.pop(tweak)
+        params.update(kwargs)
+        # aiohttp doesn't filter None values
+        return dict(filter(lambda item: item[1] is not None, params.items()))
+
+
+def load(cleverbot_class, file):
+    cleverbot_kwargs, convos_kwargs = pickle.load(file)
+    cleverbot = cleverbot_class(**cleverbot_kwargs)
+    for convo_kwargs in convos_kwargs:
+        cleverbot.conversation(**convo_kwargs)
+    return cleverbot

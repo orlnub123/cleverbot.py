@@ -1,13 +1,12 @@
-import pickle
-
 import requests
 
 from . import __version__
-from .base import CleverbotBase, ConversationBase
+from .base import (CleverbotBase, ConversationBase, SayMixinBase,
+                   load as base_load)
 from .errors import APIError, DecodeError, Timeout
 
 
-class SayMixin:
+class SayMixin(SayMixinBase):
 
     def say(self, input=None, **kwargs):
         """Talk to Cleverbot.
@@ -26,32 +25,10 @@ class SayMixin:
             DecodeError: An error occurred while reading the reply.
             Timeout: The request timed out.
         """
-        params = {
-            'key': self.key,
-            'input': input,
-            'cs': self.data.get('cs'),
-            'cb_settings_tweak1': self.tweak1,
-            'cb_settings_tweak2': self.tweak2,
-            'cb_settings_tweak3': self.tweak3,
-            'wrapper': 'cleverbot.py'
-        }
-        if kwargs:
-            for tweak in ('tweak1', 'tweak2', 'tweak3'):
-                setting = 'cb_settings_' + tweak
-                if tweak in kwargs and setting not in kwargs:
-                    kwargs[setting] = kwargs.pop(tweak)
-                elif tweak in kwargs and setting in kwargs:
-                    message = "Supplied both {0!r} and {1!r}"
-                    raise TypeError(message.format(tweak, setting))
-            params.update(kwargs)
-
-        headers = {
-            'User-Agent': 'cleverbot.py/' + __version__ + ' '
-            '(+https://github.com/orlnub123/cleverbot.py)'
-        }
+        params = self._get_params(input, kwargs)
         try:
             reply = self.session.get(
-                self.url, params=params, headers=headers, timeout=self.timeout)
+                self.url, params=params, timeout=self.timeout)
         except requests.Timeout:
             raise Timeout(self.timeout)
         else:
@@ -83,6 +60,9 @@ class Cleverbot(SayMixin, CleverbotBase):
         """
         super(Cleverbot, self).__init__(*args, **kwargs)
         self.session = requests.Session()
+        headers = {'User-Agent': 'cleverbot.py/' + __version__ + ' '
+                   '(+https://github.com/orlnub123/cleverbot.py)'}
+        self.session.headers.update(headers)
 
     def conversation(self, name=None, **kwargs):
         """Make a new conversation.
@@ -119,8 +99,4 @@ def load(file):
     Returns:
         A new Cleverbot instance.
     """
-    cleverbot_kwargs, convos = pickle.load(file)
-    cleverbot = Cleverbot(**cleverbot_kwargs)
-    for convo_kwargs in convos:
-        cleverbot.conversation(**convo_kwargs)
-    return cleverbot
+    return base_load(Cleverbot, file)

@@ -23,7 +23,10 @@ class DecodeError(CleverbotError):
 class Timeout(CleverbotError):
     """Raised when the request takes longer than the specified time."""
 
-    def __init__(self, timeout):
-        super(Timeout, self).__init__(
-            "Request timed out after {0} seconds".format(timeout))
+    def __init__(self, timeout=None):
+        if timeout is not None:
+            message = "Request timed out after {0} seconds".format(timeout)
+        else:
+            message = "Request timed out"
+        super(Timeout, self).__init__(message)
         self.timeout = timeout

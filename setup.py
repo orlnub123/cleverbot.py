@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+
 try:
     from setuptools import setup
 except ImportError:
@@ -26,8 +27,8 @@ with open('README.rst') as f:
 setup(
     name='cleverbot.py',
     version=version,
-    description='A Cleverbot API wrapper for Python with asynchronous '
-                'functionality.',
+    description="A Cleverbot API wrapper for Python with asynchronous "
+                "functionality.",
     long_description=readme,
     url='https://github.com/orlnub123/cleverbot.py',
     author='orlnub123',
