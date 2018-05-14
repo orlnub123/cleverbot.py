@@ -85,7 +85,7 @@ class CleverbotBase(AttributeMixin):
                 else:
                     convo_dict = {'cs': convo.data.get('cs')}
                 items = ('key', 'timeout', 'tweak1', 'tweak2', 'tweak3')
-                _items = map(lambda item: '_' + item, items)
+                _items = ('_' + item for item in items)
                 for item, _item in zip(items, _items):
                     if hasattr(convo, _item):
                         convo_dict[item] = getattr(convo, _item)
@@ -114,9 +114,9 @@ class ConversationBase(AttributeMixin):
     def __init__(self, cleverbot, **kwargs):
         self.cleverbot = cleverbot
         self.data = {}
-        items = ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3')
-        for item in filter(lambda item: item in kwargs, items):
-            setattr(self, item, kwargs.pop(item))
+        for item in ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
+            if item in kwargs:
+                setattr(self, item, kwargs.pop(item))
         self.session = cleverbot.session
         error_on_kwarg(self.__init__, kwargs)
 
@@ -144,8 +144,9 @@ class SayMixinBase(object):
             'cb_settings_tweak3': self.tweak3,
             'wrapper': 'cleverbot.py'
         }
-        tweaks = ('tweak1', 'tweak2', 'tweak3')
-        for tweak in filter(lambda tweak: tweak in kwargs, tweaks):
+        for tweak in ('tweak1', 'tweak2', 'tweak3'):
+            if tweak not in kwargs:
+                continue
             setting = 'cb_settings_' + tweak
             if setting in kwargs:
                 message = "Supplied both {0!r} and {1!r}"
@@ -153,7 +154,8 @@ class SayMixinBase(object):
             kwargs[setting] = kwargs.pop(tweak)
         params.update(kwargs)
         # aiohttp doesn't filter None values
-        return dict(filter(lambda item: item[1] is not None, params.items()))
+        return dict((key, value) for key, value in params.items()
+                    if value is not None)
 
 
 def load(cleverbot_class, file):
