@@ -8,13 +8,6 @@ except ImportError:
     from distutils.core import setup
 
 
-if sys.version_info < (3, 4, 2):
-    os.environ['PYTEST_ADDOPTS'] = '-p no:asyncio'
-else:
-    import importlib
-    if importlib.util.find_spec('aiohttp') is None:
-        os.environ['PYTEST_ADDOPTS'] = '-p no:asyncio'
-
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 with open('cleverbot/__init__.py') as f:
@@ -23,6 +16,9 @@ with open('cleverbot/__init__.py') as f:
 
 with open('README.rst') as f:
     readme = f.read()
+
+needs_pytest = set(['pytest', 'test', 'ptr']).intersection(sys.argv)
+pytest_runner = ['pytest-runner'] if needs_pytest else []
 
 setup(
     name='cleverbot.py',
@@ -36,8 +32,9 @@ setup(
     packages=['cleverbot', 'cleverbot.async_'],
     install_requires=['requests>=1.0.0'],
     extras_require={'async': ['aiohttp>=1.0.0']},
-    setup_requires=['pytest-runner'],
-    tests_require=['pytest>=2.5.0', 'pytest-asyncio>=0.1.3'],
+    setup_requires=pytest_runner,
+    tests_require=['pytest>=2.5.0',
+                   'pytest-asyncio>=0.1.3; python_version>="3.4.2"'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: MIT License',
