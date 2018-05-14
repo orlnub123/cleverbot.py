@@ -1,6 +1,6 @@
 def error_on_kwarg(func, kwargs):
     if kwargs:
-        message = "{0}() got an unexpected keyword argument {1!r}"
+        message = "{}() got an unexpected keyword argument {!r}"
         raise TypeError(message.format(func.__name__, next(iter(kwargs))))
 
 

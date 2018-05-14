@@ -14,7 +14,7 @@ class AttributeMixin(object):
         try:
             return self.data[attr]
         except KeyError:
-            message = "{0!r} object has no attribute {1!r}"
+            message = "{!r} object has no attribute {!r}"
             raise AttributeError(message.format(type(self).__name__, attr))
 
     @property
@@ -149,13 +149,13 @@ class SayMixinBase(object):
                 continue
             setting = 'cb_settings_' + tweak
             if setting in kwargs:
-                message = "Supplied both {0!r} and {1!r}"
+                message = "Supplied both {!r} and {!r}"
                 raise TypeError(message.format(tweak, setting))
             kwargs[setting] = kwargs.pop(tweak)
         params.update(kwargs)
         # aiohttp doesn't filter None values
-        return dict((key, value) for key, value in params.items()
-                    if value is not None)
+        return {key: value for key, value in params.items()
+                if value is not None}
 
 
 def load(cleverbot_class, file):

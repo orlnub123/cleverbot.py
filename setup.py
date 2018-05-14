@@ -17,7 +17,7 @@ with open('cleverbot/__init__.py') as f:
 with open('README.rst') as f:
     readme = f.read()
 
-needs_pytest = set(['pytest', 'test', 'ptr']).intersection(sys.argv)
+needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
 pytest_runner = ['pytest-runner'] if needs_pytest else []
 
 setup(
@@ -42,7 +42,6 @@ setup(
         'Operating System :: OS Independent',
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.1',

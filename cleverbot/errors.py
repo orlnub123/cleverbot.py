@@ -25,7 +25,7 @@ class Timeout(CleverbotError):
 
     def __init__(self, timeout=None):
         if timeout is not None:
-            message = "Request timed out after {0} seconds".format(timeout)
+            message = "Request timed out after {} seconds".format(timeout)
         else:
             message = "Request timed out"
         super(Timeout, self).__init__(message)
