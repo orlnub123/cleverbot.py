@@ -1,3 +1,6 @@
+import contextlib
+
+
 def error_on_kwarg(func, kwargs):
     if kwargs:
         message = "{}() got an unexpected keyword argument {!r}"
@@ -10,3 +13,13 @@ def convo_property(name):
     setter = lambda self, value: setattr(self, _name, value)
     deleter = lambda self: delattr(self, _name)
     return property(getter, setter, deleter)
+
+
+@contextlib.contextmanager
+def ensure_file(file, *args, **kwargs):
+    if isinstance(file, str):
+        file = open(file, *args, **kwargs)
+        yield file
+        file.close()
+        return
+    yield file

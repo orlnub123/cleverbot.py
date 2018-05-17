@@ -188,8 +188,7 @@ you can use ``cb.save``:
 
 .. code:: py
 
-    with open('cleverbot.txt', 'wb') as file:
-        cb.save(file)
+    cb.save('cleverbot.pickle')
 
 This saves the key, timeout and tweaks you've given to Cleverbot and its
 conversations and also the current cleverbot state of each.
@@ -199,15 +198,13 @@ instance use ``cleverbot.load``:
 
 .. code:: py
 
-    with open('cleverbot.txt', 'rb') as file:
-        cb = cleverbot.load(file)
+    cb = cleverbot.load('cleverbot.pickle')
 
 To only load the conversations use ``cb.load``:
 
 .. code:: py
 
-    with open('cleverbot.txt', 'rb') as file:
-        cb.load(file)
+    cb.load('cleverbot.pickle')
 
 Loading conversations will delete the old ones.
 

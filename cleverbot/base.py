@@ -1,6 +1,6 @@
 import pickle
 
-from .utils import convo_property, error_on_kwarg
+from .utils import convo_property, ensure_file, error_on_kwarg
 
 
 class AttributeMixin(object):
@@ -72,7 +72,8 @@ class CleverbotBase(AttributeMixin):
         object.
 
         Arguments:
-            file: A file object that accepts bytes to save the data to.
+            file: A filename or a file object that accepts bytes to save the
+                data to.
         """
         obj = ({'key': self.key, 'cs': self.cs, 'timeout': self.timeout,
                 'tweak1': self.tweak1, 'tweak2': self.tweak2,
@@ -90,17 +91,20 @@ class CleverbotBase(AttributeMixin):
                     if hasattr(convo, _item):
                         convo_dict[item] = getattr(convo, _item)
                 obj[1].append(convo_dict)
-        pickle.dump(obj, file, pickle.HIGHEST_PROTOCOL)
+        with ensure_file(file, 'wb') as file:
+            pickle.dump(obj, file, pickle.HIGHEST_PROTOCOL)
 
     def load(self, file):
         """Load and replace Cleverbot's conversations with the previously saved
         conversations from the file.
 
         Arguments:
-            file: The file object to load the saved conversations from.
+            file: The filename or file object to load the saved conversations
+                from.
         """
         self.conversations = None
-        convos_kwargs = pickle.load(file)[1]
+        with ensure_file(file, 'rb') as file:
+            convos_kwargs = pickle.load(file)[1]
         for convo_kwargs in convos_kwargs:
             self.conversation(**convo_kwargs)
 
@@ -159,7 +163,8 @@ class SayMixinBase(object):
 
 
 def load(cleverbot_class, file):
-    cleverbot_kwargs, convos_kwargs = pickle.load(file)
+    with ensure_file(file, 'rb') as file:
+        cleverbot_kwargs, convos_kwargs = pickle.load(file)
     cleverbot = cleverbot_class(**cleverbot_kwargs)
     for convo_kwargs in convos_kwargs:
         cleverbot.conversation(**convo_kwargs)
