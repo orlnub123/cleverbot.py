@@ -42,7 +42,7 @@ Or install it with the asynchronous dependencies (Python 3.4.2+ only):
 
 **Requirements:**
 
-- Python 3.1+ or 2.7
+- Python 3.2+ or 2.7
 - `A Cleverbot API key <https://www.cleverbot.com/api/>`_
 
 **Dependencies:**
