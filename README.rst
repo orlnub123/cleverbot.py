@@ -92,10 +92,10 @@ Talk straight to Cleverbot:
 
     reply = cb.say("Hello")
 
-You can pass in keyword arguments to ``say`` such as ``cs`` to change the
-conversation, ``vtext`` to change the current conversation's history, or even
-``tweak`` as an alias for ``cb_settings_tweak`` to change Cleverbot's mood.
-Read the "Parameters" section of `the official Cleverbot API docs
+You can pass in keyword arguments to ``Cleverbot.say`` such as ``cs`` to change
+the conversation, ``vtext`` to change the current conversation's history, or
+even ``tweak`` as an alias for ``cb_settings_tweak`` to change Cleverbot's
+mood. Read the "Parameters" section of `the official Cleverbot API docs
 <https://www.cleverbot.com/api/howto/>`_ for more information.
 
 Alternatively, start a new conversation and talk from it:
@@ -110,14 +110,15 @@ Cleverbot takes as keyword arguments including ``key``. The values you don't
 pass in excluding the cleverbot state will be taken from the originating
 Cleverbot.
 
-Normally conversations get saved in ``cb.conversations`` as a list but if you
-want to manage them more easily you can pass in a name as the first argument to
-every conversation you create which will turn ``cb.conversations`` into a
-dictionary with the name as the key and the conversation as the value. Trying
-to mix both named and nameless conversations will result in an error.
+Normally conversations get saved in ``Cleverbot.conversations`` as a list but
+if you want to manage them more easily you can pass in a name as the first
+argument to every conversation you create which will turn
+``Cleverbot.conversations`` into a dictionary with the name as the key and the
+conversation as the value. Trying to mix both named and nameless conversations
+will result in an error.
 
-``say`` is a coroutine for both Cleverbot and its conversations if you're
-running asynchronously.
+``Cleverbot.say`` is a coroutine for both Cleverbot and its conversations if
+you're running asynchronously.
 
 --------------
 
@@ -142,7 +143,7 @@ like so:
         print(error.error, error.status)
 
 This is similar for ``Timeout`` where you can get the defined timeout
-value with ``error.timeout``.
+value with ``Timeout.timeout``.
 
 Additionally, all Cleverbot errors subclass ``CleverbotError`` so you can use
 it to catch every Cleverbot related error.
@@ -151,15 +152,17 @@ it to catch every Cleverbot related error.
 
 To access the data gained from talking straight to Cleverbot or from talking in
 a conversation you can either get it from an attribute as shown previously or
-directly get it from the ``data`` dictionary:
+directly get it from the ``Cleverbot.data`` or ``Conversation.data``
+dictionary:
 
 .. code:: py
 
     cb.conversation_id == cb.data['conversation_id']
     convo.conversation_id == convo.data['conversation_id']
 
-Note that every attribute except for ``cs`` (i.e. the cleverbot state) is
-read-only and will get shadowed if you set it to something.
+Note that every attribute except for ``Cleverbot.cs`` and ``Conversation.cs``
+(i.e. the cleverbot state) is read-only and will get shadowed if you set it to
+something.
 
 For a list of all of the data and their descriptions go to the "JSON Reply"
 section in `the official Cleverbot API docs
@@ -172,8 +175,7 @@ following:
 
     cb.reset()
 
-To only reset a single conversation's data use ``reset`` on the conversation
-instead:
+To only reset a single conversation's data use ``Conversation.reset`` instead:
 
 .. code:: py
 
@@ -184,7 +186,7 @@ Resetting won't delete any conversations so you'll be able to reuse them.
 --------------
 
 If you want to save the current state of Cleverbot and all of its conversations
-you can use ``cb.save``:
+you can use ``Cleverbot.save``:
 
 .. code:: py
 
@@ -194,13 +196,13 @@ This saves the key, timeout and tweaks you've given to Cleverbot and its
 conversations and also the current cleverbot state of each.
 
 In order to load and recreate the previously saved state as a new Cleverbot
-instance use ``cleverbot.load``:
+instance use ``load``:
 
 .. code:: py
 
     cb = cleverbot.load('cleverbot.pickle')
 
-To only load the conversations use ``cb.load``:
+To only load the conversations use ``Cleverbot.load``:
 
 .. code:: py
 
