@@ -117,8 +117,8 @@ argument to every conversation you create which will turn
 conversation as the value. Trying to mix both named and nameless conversations
 will result in an error.
 
-``Cleverbot.say`` is a coroutine for both Cleverbot and its conversations if
-you're running asynchronously.
+``Cleverbot.say`` and ``Conversation.say`` are coroutines if you're running
+asynchronously.
 
 --------------
 
