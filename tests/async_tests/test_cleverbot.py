@@ -7,7 +7,7 @@ from cleverbot import async_ as cleverbot
 
 
 @pytest.fixture
-def cb(request, monkeypatch):
+def cb(request, monkeypatch, event_loop):
     cb = cleverbot.Cleverbot('API_KEY', cs='76nxdxIJ02AAA', timeout=60,
                              tweak1=25, tweak2=50, tweak3=75)
     if hasattr(request, 'param'):
@@ -31,31 +31,32 @@ def cb(request, monkeypatch):
             return MockResponse()
         monkeypatch.setattr(cb.session, 'get', mock_get)
     yield cb
-    cb.close()
+    event_loop.run_until_complete(cb.close())
 
 
 @pytest.fixture
-def cb_nameless():
+def cb_nameless(event_loop):
     cb = cleverbot.Cleverbot('API_KEY', cs='76nxdxIJ02AAA', timeout=60,
                              tweak1=25, tweak2=50, tweak3=75)
     for i, s in enumerate(map(str, range(200))):
         cb.conversation(key=s, cs=s, timeout=i)
     yield cb
-    cb.close()
+    event_loop.run_until_complete(cb.close())
 
 
 @pytest.fixture
-def cb_named():
+def cb_named(event_loop):
     cb = cleverbot.Cleverbot('API_KEY', cs='76nxdxIJ02AAA', timeout=60,
                              tweak1=25, tweak2=50, tweak3=75)
     for i, s in enumerate(map(str, range(200))):
         cb.conversation(s, key=s, cs=s, timeout=i)
     yield cb
-    cb.close()
+    event_loop.run_until_complete(cb.close())
 
 
 class TestCleverbot:
 
+    @pytest.mark.asyncio
     def test_init(self):
         cb = cleverbot.Cleverbot('API_KEY', cs='76nxdxIJ02AAA', timeout=60,
                                  tweak1=25, tweak2=50, tweak3=75)
@@ -65,14 +66,15 @@ class TestCleverbot:
         assert cb.tweak1 == 25
         assert cb.tweak2 == 50
         assert cb.tweak3 == 75
-        cb.close()
+        yield from cb.close()
 
+    @pytest.mark.asyncio
     def test_cs(self):
         cb = cleverbot.Cleverbot(None, cs='76nxdxIJ02AAA')
         assert cb.cs == cb.data['cs']
         cb.cs = 'test'
         assert cb.cs == 'test'
-        cb.close()
+        yield from cb.close()
 
     def test_getattr(self, cb):
         cb.data = {'test': 'value'}
@@ -359,6 +361,7 @@ class TestIO:
             for item in ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
                 assert getattr(convo1, item) == getattr(convo2, item)
 
+    @pytest.mark.asyncio
     def test_load_nameless(self, cb_nameless):
         with io.BytesIO() as f:
             cb_nameless.save(f)
@@ -369,8 +372,9 @@ class TestIO:
         for convo1, convo2 in zip(cb.conversations, cb_nameless.conversations):
             for item in ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
                 assert getattr(convo1, item) == getattr(convo2, item)
-        cb.close()
+        yield from cb.close()
 
+    @pytest.mark.asyncio
     def test_load_named(self, cb_named):
         convos = cb_named.conversations
         with io.BytesIO() as f:
@@ -383,4 +387,4 @@ class TestIO:
             convo2 = convos[name]
             for item in ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
                 assert getattr(convo1, item) == getattr(convo2, item)
-        cb.close()
+        yield from cb.close()

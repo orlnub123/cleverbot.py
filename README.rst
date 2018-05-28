@@ -216,3 +216,5 @@ connection to the API:
 .. code:: py
 
     cb.close()
+
+``Cleverbot.close`` is a coroutine if you're using Cleverbot asynchronously.

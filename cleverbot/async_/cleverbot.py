@@ -87,9 +87,10 @@ class Cleverbot(SayMixin, CleverbotBase):
         super().conversation(name, convo)
         return convo
 
+    @asyncio.coroutine
     def close(self):
         """Close Cleverbot's connection to the API."""
-        self.session.close()
+        yield from self.session.close()
 
 
 class Conversation(SayMixin, ConversationBase):
