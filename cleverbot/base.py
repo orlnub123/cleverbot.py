@@ -80,9 +80,13 @@ class CleverbotBase(AttributeMixin):
     def reset(self):
         """Reset Cleverbot's stored data and all of its conversations."""
         self.data = {}
-        for convo in self.conversations:
-            if isinstance(self.conversations, dict):
-                convo = self.conversations[convo]
+        convos = self.conversations
+        if convos is None:
+            return
+
+        if isinstance(convos, dict):
+            convos = convos.values()
+        for convo in convos:
             convo.reset()
 
     def save(self, file):
