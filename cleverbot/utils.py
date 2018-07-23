@@ -1,5 +1,8 @@
 import contextlib
+import functools
+import inspect
 import pickle
+import sys
 from distutils.version import StrictVersion
 
 from .migrations import migrations
@@ -19,10 +22,33 @@ class GenericUnpickler(pickle.Unpickler, object):  # Old-style class on py2
         return super(GenericUnpickler, self).find_class(module, name)
 
 
-def error_on_kwarg(func, kwargs):
-    if kwargs:
-        message = "{}() got an unexpected keyword argument {!r}"
-        raise TypeError(message.format(func.__name__, next(iter(kwargs))))
+def keyword_only(kwonly_start):
+    def decorator(func):
+        if sys.version_info.major == 2:
+            args, _, _, defaults = inspect.getargspec(func)
+        else:
+            args, _, _, defaults = inspect.getfullargspec(func)[:4]
+        kwonly_index = args.index(kwonly_start)
+        required_kwonly_args = set(args[kwonly_index:-len(defaults)])
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if len(args) > kwonly_index:
+                raise TypeError(
+                    "{}() takes {} positional arguments but {} were given"
+                    .format(func.__name__, kwonly_index, len(args)))
+
+            missing = required_kwonly_args.difference(kwargs)
+            if missing:
+                raise TypeError(
+                    "{}() missing {} required keyword-only arguments: {}"
+                    .format(func.__name__, len(missing),
+                            ', '.join(map(repr, missing))))
+
+            return func(*args, **kwargs)
+
+        return wrapper
+    return decorator
 
 
 def convo_property(name):

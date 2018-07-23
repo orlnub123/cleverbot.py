@@ -1,8 +1,8 @@
 import pickle
 
 from .migrations import migratable
-from .utils import (GenericUnpickler, convo_property, ensure_file,
-                    error_on_kwarg, get_slots)
+from .utils import (GenericUnpickler, convo_property, ensure_file, get_slots,
+                    keyword_only)
 
 
 class AttributeMixin(object):
@@ -36,16 +36,18 @@ class AttributeMixin(object):
 class CleverbotBase(AttributeMixin):
     """Base class for Cleverbot."""
 
-    def __init__(self, key, **kwargs):  # Python 2 compatible keyword-only args
+    @keyword_only('cs')
+    def __init__(self, key, cs=None, timeout=None, tweak1=None, tweak2=None,
+                 tweak3=None):
         self.key = key
         self.data = {}
-        if 'cs' in kwargs:
-            self.data['cs'] = kwargs.pop('cs')
-        self.timeout = kwargs.pop('timeout', None)
-        for tweak in ('tweak1', 'tweak2', 'tweak3'):
-            setattr(self, tweak, kwargs.pop(tweak, None))
+        if cs is not None:
+            self.data['cs'] = cs
+        self.timeout = timeout
+        self.tweak1 = tweak1
+        self.tweak2 = tweak2
+        self.tweak3 = tweak3
         self.conversations = None
-        error_on_kwarg(self.__init__, kwargs)
 
     def __getstate__(self):
         state = vars(self).copy()
@@ -137,14 +139,16 @@ class ConversationBase(AttributeMixin):
     tweak2 = convo_property('tweak2')
     tweak3 = convo_property('tweak3')
 
-    def __init__(self, cleverbot, **kwargs):
+    @keyword_only('key')
+    def __init__(self, cleverbot, key=None, cs=None, timeout=None, tweak1=None,
+                 tweak2=None, tweak3=None):
         self.cleverbot = cleverbot
         self.data = {}
         for item in ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
-            if item in kwargs:
-                setattr(self, item, kwargs.pop(item))
+            value = locals()[item]
+            if value is not None:
+                setattr(self, item, value)
         self.session = cleverbot.session
-        error_on_kwarg(self.__init__, kwargs)
 
     def __getstate__(self):
         return {item: getattr(self, item) for item in get_slots(type(self))
