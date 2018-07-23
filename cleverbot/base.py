@@ -128,6 +128,12 @@ class ConversationBase(AttributeMixin):
     __slots__ = ('cleverbot', 'data', '_key', '_timeout', '_tweak1', '_tweak2',
                  '_tweak3', 'session')
 
+    key = convo_property('key')
+    timeout = convo_property('timeout')
+    tweak1 = convo_property('tweak1')
+    tweak2 = convo_property('tweak2')
+    tweak3 = convo_property('tweak3')
+
     def __init__(self, cleverbot, **kwargs):
         self.cleverbot = cleverbot
         self.data = {}
@@ -147,12 +153,6 @@ class ConversationBase(AttributeMixin):
 
     def reset(self):
         self.data = {}
-
-    key = convo_property('key')
-    timeout = convo_property('timeout')
-    tweak1 = convo_property('tweak1')
-    tweak2 = convo_property('tweak2')
-    tweak3 = convo_property('tweak3')
 
 
 class SayMixinBase(object):
