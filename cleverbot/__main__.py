@@ -2,10 +2,15 @@ from __future__ import absolute_import, print_function
 
 import argparse
 import getpass
+import inspect
 import os
+import pickle
 import sys
+from distutils.version import StrictVersion
 
 import cleverbot
+from cleverbot.migrations import migratables
+from cleverbot.utils import get_migrations
 
 
 class KwargsParser(argparse.ArgumentParser):
@@ -72,22 +77,81 @@ def say(parser, args):
         cb.close()
 
 
+def migrate(parser, args):
+
+    def get_version(object):
+        if (isinstance(object, tuple) and len(object) == 2 and
+                isinstance(object[0], dict) and isinstance(object[1], list)):
+            keys = list(object[0])
+            items = ['key', 'cs', 'timeout']
+            tweaks = ['tweak1', 'tweak2', 'tweak3']
+            if keys == items:
+                return '2.1.1'
+            elif keys == items + tweaks:
+                return '2.4.0'
+
+        return '2.5.0'
+
+    def migrate(state, version, cls=None):
+        for migration in get_migrations(version, args.target, cls=cls):
+            if migration.regression:
+                print("Regression Notice:", inspect.getdoc(migration),
+                      file=sys.stderr)
+            state = migration(state)
+        return state
+
+    @classmethod
+    def setstate(cls, state):
+        state, version = state
+        state = migrate(state, version, cls=cls)
+        cls.__getstate__ = lambda _: (state, args.target)
+
+    for cls in migratables:
+        cls.__setstate__ = setstate
+
+    state = pickle.load(args.input)
+
+    # Handle older top-level state change
+    version = get_version(state)
+    state = migrate(state, version)
+
+    pickle.dump(state, args.output, protocol=pickle.HIGHEST_PROTOCOL)
+
+
 def add_subparsers(parser):
+
+    def add_say_parser(subparsers):
+        parser = subparsers.add_parser(
+            'say', usage='[-h] --key KEY [--kwargs KWARGS ...] [input]',
+            description="Manually interact with Cleverbot.",
+            argument_default=argparse.SUPPRESS,
+            help="manually interact with Cleverbot")
+        parser.add_argument('input', nargs='?',
+                            help="what to say to Cleverbot")
+        if 'CLEVERBOT_KEY' in os.environ:
+            kwargs = {'default': os.environ['CLEVERBOT_KEY']}
+        else:
+            kwargs = {'required': True}
+        parser.add_argument('--key', help="your API key", **kwargs)
+
+    def add_migrate_parser(subparsers):
+        parser = subparsers.add_parser(
+            'migrate', description="Migrate a pickled Cleverbot instance.",
+            help="migrate a pickled Cleverbot instance")
+        parser.add_argument('input', type=argparse.FileType('rb'),
+                            help="the file to migrate from")
+        parser.add_argument('-t', '--target', default=cleverbot.__version__,
+                            type=lambda version: str(StrictVersion(version)),
+                            help="the target migration version")
+        parser.add_argument('-o', '--output', type=argparse.FileType('wb'),
+                            required=True,
+                            help="the file to save the migration to")
+
     subparsers = parser.add_subparsers(
         title='subcommands', parser_class=KwargsParser,
         action=SubParsersAction)
-    parser_say = subparsers.add_parser(
-        'say', usage='[-h] --key KEY [--kwargs KWARGS ...] [input]',
-        description="Manually interact with Cleverbot.",
-        argument_default=argparse.SUPPRESS,
-        help="manually interact with Cleverbot")
-    parser_say.add_argument('input', nargs='?',
-                            help="what to say to Cleverbot")
-    if 'CLEVERBOT_KEY' in os.environ:
-        kwargs = {'default': os.environ['CLEVERBOT_KEY']}
-    else:
-        kwargs = {'required': True}
-    parser_say.add_argument('--key', help="your API key", **kwargs)
+    add_say_parser(subparsers)
+    add_migrate_parser(subparsers)
 
 
 def create_parser():

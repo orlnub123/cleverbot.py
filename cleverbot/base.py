@@ -1,5 +1,6 @@
 import pickle
 
+from .migrations import migratable
 from .utils import (GenericUnpickler, convo_property, ensure_file,
                     error_on_kwarg, get_slots)
 
@@ -31,6 +32,7 @@ class AttributeMixin(object):
         self.data.pop('cs', None)
 
 
+@migratable
 class CleverbotBase(AttributeMixin):
     """Base class for Cleverbot."""
 
@@ -122,6 +124,7 @@ class CleverbotBase(AttributeMixin):
             convo.session = self.session
 
 
+@migratable
 class ConversationBase(AttributeMixin):
     """Base class for Conversation."""
 

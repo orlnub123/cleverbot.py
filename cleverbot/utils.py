@@ -1,5 +1,8 @@
 import contextlib
 import pickle
+from distutils.version import StrictVersion
+
+from .migrations import migrations
 
 
 class GenericUnpickler(pickle.Unpickler, object):  # Old-style class on py2
@@ -61,3 +64,37 @@ def get_slots(cls):
                     member = '_{}{}'.format(stripped, member)
             slots.add(member)
     return slots
+
+
+def get_migrations(version, target, cls=None):
+    version, target = map(StrictVersion, [version, target])
+    if version == target:
+        return []
+
+    if cls is not None:
+        for migratable, cls_migrations in migrations.items():
+            if migratable is not None and issubclass(cls, migratable):
+                break
+        else:
+            return []
+    else:
+        cls_migrations = migrations[None]
+
+    target_migrations = []
+    downgrade = target < version
+    for migration_version, types in cls_migrations.items():
+        if downgrade:
+            if migration_version > target and migration_version <= version:
+                try:
+                    target_migrations.append(types['downgrade'])
+                except KeyError:
+                    pass
+        else:
+            if migration_version <= target and migration_version > version:
+                try:
+                    target_migrations.append(types['upgrade'])
+                except KeyError:
+                    pass
+    if downgrade:
+        target_migrations.reverse()
+    return target_migrations
