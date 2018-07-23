@@ -23,10 +23,12 @@ def migration(version, cls=None, downgrade=False, regression=False):
 
 def migratable(cls):
     migratables.append(cls)
+    original_getstate = cls.__getstate__
+    original_setstate = cls.__setstate__
 
     @functools.wraps(cls.__getstate__)
     def getstate(self):
-        state = getstate.__wrapped__(self)
+        state = original_getstate(self)
         return (state, __version__)
 
     @functools.wraps(cls.__setstate__)
@@ -39,7 +41,7 @@ def migratable(cls):
                     "Force migrate via the CLI. Learn more with `python -m "
                     "cleverbot migrate -h`".format(inspect.getdoc(migration)))
             state = migration(state)
-        setstate.__wrapped__(self, state)
+        original_setstate(self, state)
 
     cls.__getstate__ = getstate
     cls.__setstate__ = setstate
