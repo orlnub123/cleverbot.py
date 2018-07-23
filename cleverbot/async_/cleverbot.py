@@ -1,10 +1,10 @@
 import asyncio
+import functools
 
 import aiohttp
 
 from .. import __version__
-from ..base import (CleverbotBase, ConversationBase, SayMixinBase,
-                    load as base_load)
+from ..base import CleverbotBase, ConversationBase, SayMixinBase, load
 from ..errors import APIError, DecodeError, Timeout
 
 
@@ -98,13 +98,4 @@ class Conversation(SayMixin, ConversationBase):
     __slots__ = ()
 
 
-def load(file):
-    """Load and return the previously saved Cleverbot with its conversations.
-
-    Arguments:
-        file: The file object to load Cleverbot and its conversations from.
-
-    Returns:
-        A new Cleverbot instance.
-    """
-    return base_load(Cleverbot, file)
+load = functools.partial(load, __name__)
