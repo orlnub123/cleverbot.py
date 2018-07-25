@@ -28,7 +28,10 @@ def migratable(cls):
 
     @functools.wraps(cls.__getstate__)
     def getstate(self):
-        state = original_getstate(self)
+        if hasattr(original_getstate, '__get__'):
+            state = original_getstate.__get__(self)()
+        else:
+            state = original_getstate()
         return (state, __version__)
 
     @functools.wraps(cls.__setstate__)
@@ -41,7 +44,10 @@ def migratable(cls):
                     "Force migrate via the CLI. Learn more with `python -m "
                     "cleverbot migrate -h`".format(inspect.getdoc(migration)))
             state = migration(state)
-        original_setstate(self, state)
+        if hasattr(original_setstate, '__get__'):
+            original_setstate.__get__(self)(state)
+        else:
+            original_setstate(state)
 
     cls.__getstate__ = getstate
     cls.__setstate__ = setstate
