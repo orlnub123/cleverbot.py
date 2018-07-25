@@ -341,16 +341,15 @@ class TestIO:
             cb_named.save(f)
             assert f.getvalue()
 
-    def test_cleverbot_load_nameless(self, cb, cb_nameless):
+    def test_cleverbot_load_data(self, cb):
         with io.BytesIO() as f:
-            cb_nameless.save(f)
+            cb.save(f)
             with io.BytesIO(f.getvalue()) as f:
-                cb.load(f)
-        for convo1, convo2 in zip(cb.conversations, cb_nameless.conversations):
-            for item in ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
-                assert getattr(convo1, item) == getattr(convo2, item)
+                cb2 = cleverbot.Cleverbot(None)
+                cb2.load(f)
+        assert cb2.data == cb.data
 
-    def test_cleverbot_load_named(self, cb, cb_named):
+    def test_cleverbot_load_conversations(self, cb, cb_named):
         convos = cb_named.conversations
         with io.BytesIO() as f:
             cb_named.save(f)
@@ -362,27 +361,22 @@ class TestIO:
                 assert getattr(convo1, item) == getattr(convo2, item)
 
     @pytest.mark.asyncio
-    def test_load_nameless(self, cb_nameless):
+    def test_load_data(self, cb):
         with io.BytesIO() as f:
-            cb_nameless.save(f)
+            cb.save(f)
             with io.BytesIO(f.getvalue()) as f:
-                cb = cleverbot.load(f)
+                cb2 = cleverbot.load(f)
         for item in ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
-            assert getattr(cb, item) == getattr(cb_nameless, item)
-        for convo1, convo2 in zip(cb.conversations, cb_nameless.conversations):
-            for item in ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
-                assert getattr(convo1, item) == getattr(convo2, item)
+            assert getattr(cb2, item) == getattr(cb, item)
         yield from cb.close()
 
     @pytest.mark.asyncio
-    def test_load_named(self, cb_named):
+    def test_load_conversations(self, cb_named):
         convos = cb_named.conversations
         with io.BytesIO() as f:
             cb_named.save(f)
             with io.BytesIO(f.getvalue()) as f:
                 cb = cleverbot.load(f)
-        for item in ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
-            assert getattr(cb, item) == getattr(cb_named, item)
         for name, convo1 in cb.conversations.items():
             convo2 = convos[name]
             for item in ('key', 'cs', 'timeout', 'tweak1', 'tweak2', 'tweak3'):
