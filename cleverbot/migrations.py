@@ -72,8 +72,9 @@ def migrator(state):
     return state
 
 
-@migration('2.5.0')
+@migration('2.5.0', regression=True)
 def migrator(state):
+    """Nameless conversations will be lost."""
     cleverbot_kwargs, convos_kwargs = state
     cb = Cleverbot(**cleverbot_kwargs)
     for convo_kwargs in convos_kwargs:
