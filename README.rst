@@ -110,9 +110,8 @@ Cleverbot takes as keyword arguments including ``key``. The values you don't
 pass in excluding the cleverbot state will be taken from the originating
 Cleverbot.
 
-Normally conversations get saved in ``Cleverbot.conversations`` as a list but
-if you want to manage them more easily you can pass in a name as the first
-argument to every conversation you create which will turn
+If you want to manage your conversations more easily you can pass in a name as
+the first argument to every conversation you create which will turn
 ``Cleverbot.conversations`` into a dictionary with the name as the key and the
 conversation as the value. Trying to mix both named and nameless conversations
 will result in an error.
@@ -151,9 +150,8 @@ it to catch every Cleverbot related error.
 --------------
 
 To access the data gained from talking straight to Cleverbot or from talking in
-a conversation you can either get it from an attribute as shown previously or
-directly get it from the ``Cleverbot.data`` or ``Conversation.data``
-dictionary:
+a conversation you can either get it from an attribute or directly get it from
+the ``Cleverbot.data`` or ``Conversation.data`` dictionary:
 
 .. code:: py
 
@@ -193,7 +191,7 @@ you can use ``Cleverbot.save``:
     cb.save('cleverbot.pickle')
 
 This saves the key, timeout and tweaks you've given to Cleverbot and its
-conversations and also the current cleverbot state of each.
+conversations and also the data of each including the cleverbot state.
 
 In order to load and recreate the previously saved state as a new Cleverbot
 instance use ``load``:
@@ -202,7 +200,7 @@ instance use ``load``:
 
     cb = cleverbot.load('cleverbot.pickle')
 
-To only load the conversations use ``Cleverbot.load``:
+To only load the data and conversations use ``Cleverbot.load``:
 
 .. code:: py
 
