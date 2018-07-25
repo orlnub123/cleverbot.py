@@ -66,6 +66,11 @@ class CleverbotBase(AttributeMixin):
         for convo in convos:
             convo.session = self.session
 
+    def __copy__(self):
+        cleverbot = self.__new__(type(self))
+        vars(cleverbot).update(vars(self))
+        return cleverbot
+
     def conversation(self, name, convo):
         """Initialize conversations if necessary and add the conversation to
         it.
@@ -157,6 +162,13 @@ class ConversationBase(AttributeMixin):
     def __setstate__(self, state):
         for item, value in state.items():
             setattr(self, item, value)
+
+    def __copy__(self):
+        convo = self.__new__(type(self))
+        for item in get_slots(type(self)):
+            if hasattr(self, item):
+                setattr(convo, item, getattr(self, item))
+        return convo
 
     def reset(self):
         self.data = {}
